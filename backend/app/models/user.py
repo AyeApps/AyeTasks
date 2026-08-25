@@ -14,8 +14,10 @@ class PomodoroSettings(BaseModel):
 
 class User(SoftDeleteDocument):
     email: EmailStr = Field(unique=True, index=True)
-    hashed_password: str
+    hashed_password: Optional[str] = None
     name: str = "Usuario"
+    auth_provider: str = Field(default="local", index=True)
+    provider_id: Optional[str] = Field(default=None, index=True)
     timezone: str = "America/Mexico_City"
     push_tokens: List[str] = Field(default_factory=list)
     pomodoro_settings: PomodoroSettings = Field(default_factory=PomodoroSettings)

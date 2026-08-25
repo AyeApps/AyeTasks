@@ -51,3 +51,18 @@ async def test_auth_and_account_deletion_flow(client: AsyncClient):
     )
     assert deleted_login_res.status_code == 404
     assert deleted_login_res.json()["detail"] == "ACCOUNT_NOT_FOUND"
+
+
+@pytest.mark.asyncio
+async def test_oauth_invalid_tokens(client: AsyncClient):
+    # Google with invalid token
+    g_res = await client.post(
+        "/api/v1/auth/oauth/google", json={"id_token": "invalid_google_token"}
+    )
+    assert g_res.status_code == 401
+
+    # Apple with invalid token
+    a_res = await client.post(
+        "/api/v1/auth/oauth/apple", json={"identity_token": "invalid_apple_token"}
+    )
+    assert a_res.status_code == 401

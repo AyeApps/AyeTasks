@@ -3,6 +3,8 @@ from typing import Optional
 from app.core.deps import CurrentUser
 from app.core.limiter import limiter
 from app.schemas.auth import (
+    AppleAuthRequest,
+    GoogleAuthRequest,
     PushTokenRequest,
     RefreshTokenRequest,
     TokenResponse,
@@ -34,6 +36,18 @@ async def register(request: Request, data: UserRegister):
 @limiter.limit("15/minute")
 async def login(request: Request, data: UserLogin):
     return await AuthService.authenticate(data)
+
+
+@router.post("/oauth/google", response_model=TokenResponse)
+@limiter.limit("15/minute")
+async def google_auth(request: Request, data: GoogleAuthRequest):
+    return await AuthService.authenticate_google(data)
+
+
+@router.post("/oauth/apple", response_model=TokenResponse)
+@limiter.limit("15/minute")
+async def apple_auth(request: Request, data: AppleAuthRequest):
+    return await AuthService.authenticate_apple(data)
 
 
 @router.post("/refresh", response_model=TokenResponse)

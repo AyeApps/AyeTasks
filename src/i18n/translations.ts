@@ -67,6 +67,10 @@ export const translations = {
       suggestRegisterBtn: 'REGISTRARSE CON ESTE CORREO ➔',
       invalidPassword: 'CONTRASEÑA INCORRECTA',
       invalidCredentials: 'CREDENCIALES INCORRECTAS',
+      continueWithGoogle: 'CONTINUAR CON GOOGLE',
+      continueWithApple: 'CONTINUAR CON APPLE',
+      orContinueWithEmail: '── O CON CORREO ELECTRÓNICO ──',
+      oauthError: 'No se pudo completar la autenticación con el proveedor.',
     },
     settings: {
       title: 'CONFIGURACIÓN // AJUSTES DEL SISTEMA',
@@ -222,6 +226,10 @@ export const translations = {
       suggestRegisterBtn: 'REGISTER WITH THIS EMAIL ➔',
       invalidPassword: 'INVALID PASSWORD',
       invalidCredentials: 'INVALID CREDENTIALS',
+      continueWithGoogle: 'CONTINUE WITH GOOGLE',
+      continueWithApple: 'CONTINUE WITH APPLE',
+      orContinueWithEmail: '── OR WITH EMAIL ──',
+      oauthError: 'Could not complete authentication with provider.',
     },
     settings: {
       title: 'SETTINGS // SYSTEM CONFIGURATION',

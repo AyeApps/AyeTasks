@@ -28,6 +28,8 @@ interface AuthState {
 
   initAuth: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
+  loginWithApple: (identityToken: string, name?: string, email?: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   updateProfile: (data: { name?: string; email?: string; current_password?: string; new_password?: string }) => Promise<void>;
   logout: () => Promise<void>;
@@ -93,6 +95,42 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await notifyAuthSuccess(user);
     } catch (err: any) {
       set({ error: err.message || 'Error al iniciar sesión', isLoading: false });
+      throw err;
+    }
+  },
+
+  loginWithGoogle: async (idToken: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const currentUserId = get().user?.id;
+      await purgeAllSessionData(currentUserId);
+
+      const data = await api.loginWithGoogle(idToken);
+      await authStorage.setTokens(data.access_token, data.refresh_token);
+      const user = await api.getMe();
+
+      set({ user, isAuthenticated: true, isLoading: false, error: null });
+      await notifyAuthSuccess(user);
+    } catch (err: any) {
+      set({ error: err.message || 'Error al iniciar sesión con Google', isLoading: false });
+      throw err;
+    }
+  },
+
+  loginWithApple: async (identityToken: string, name?: string, email?: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const currentUserId = get().user?.id;
+      await purgeAllSessionData(currentUserId);
+
+      const data = await api.loginWithApple(identityToken, name, email);
+      await authStorage.setTokens(data.access_token, data.refresh_token);
+      const user = await api.getMe();
+
+      set({ user, isAuthenticated: true, isLoading: false, error: null });
+      await notifyAuthSuccess(user);
+    } catch (err: any) {
+      set({ error: err.message || 'Error al iniciar sesión con Apple', isLoading: false });
       throw err;
     }
   },

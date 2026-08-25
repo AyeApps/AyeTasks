@@ -15,6 +15,12 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     CORS_ORIGINS: Union[List[str], str] = ["*"]
     EXPO_ACCESS_TOKEN: str = ""
+    GOOGLE_CLIENT_IDS: List[str] = [
+        "627799707976-gt9uudejrtd5d4b7pubkso0ev35j2rhr.apps.googleusercontent.com",
+        "627799707976-dmm76mhsvc1b7d7jcrf2hpfjbtnpb6te.apps.googleusercontent.com",
+        "627799707976-ek7dcu7lgfuj06us18cu5gnfuf6n3qqt.apps.googleusercontent.com",
+    ]
+    APPLE_BUNDLE_ID: str = "com.ayeapps.ayetasks"
 
     model_config = SettingsConfigDict(
         env_file=".env",

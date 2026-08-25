@@ -111,6 +111,10 @@ export const api = {
   // Auth
   register: (data: any) => apiRequest<any>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   login: (data: any) => apiRequest<any>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  loginWithGoogle: (idToken: string) =>
+    apiRequest<any>('/auth/oauth/google', { method: 'POST', body: JSON.stringify({ id_token: idToken }), requiresAuth: false }),
+  loginWithApple: (identityToken: string, name?: string, email?: string) =>
+    apiRequest<any>('/auth/oauth/apple', { method: 'POST', body: JSON.stringify({ identity_token: identityToken, name, email }), requiresAuth: false }),
   logout: () => apiRequest<void>('/auth/logout', { method: 'DELETE' }),
   deleteAccount: () => apiRequest<void>('/auth/me', { method: 'DELETE' }),
   getMe: () => apiRequest<any>('/auth/me'),

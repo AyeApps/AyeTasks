@@ -1,5 +1,9 @@
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
+import httpx
+from jose import jwt
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
 from app.core.config import settings
 from app.core.security import (
     create_access_token,
@@ -10,7 +14,78 @@ from app.core.security import (
 )
 from app.models.user import User
 from app.models.revoked_token import RevokedToken
-from app.schemas.auth import TokenResponse, UserLogin, UserRegister, UserUpdateProfile
+from app.schemas.auth import (
+    AppleAuthRequest,
+    GoogleAuthRequest,
+    TokenResponse,
+    UserLogin,
+    UserRegister,
+    UserUpdateProfile,
+)
+
+
+def verify_google_id_token(token: str) -> dict:
+    try:
+        idinfo = google_id_token.verify_oauth2_token(
+            token,
+            google_requests.Request(),
+        )
+        aud = idinfo.get("aud")
+        if aud not in settings.GOOGLE_CLIENT_IDS:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Audience de Google ID token no autorizada",
+            )
+        return idinfo
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Google ID token inválido: {str(e)}",
+        )
+
+
+async def verify_apple_id_token(token: str) -> dict:
+    try:
+        headers = jwt.get_unverified_header(token)
+        kid = headers.get("kid")
+        if not kid:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Apple token sin kid",
+            )
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get("https://appleid.apple.com/auth/keys")
+            if resp.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="No se pudo contactar a los servidores de Apple",
+                )
+            apple_keys = resp.json().get("keys", [])
+
+        key = next((k for k in apple_keys if k.get("kid") == kid), None)
+        if not key:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Clave pública de Apple no encontrada",
+            )
+
+        payload = jwt.decode(
+            token,
+            key,
+            algorithms=["RS256"],
+            audience=settings.APPLE_BUNDLE_ID,
+            issuer="https://appleid.apple.com",
+            options={"verify_at_hash": False},
+        )
+        return payload
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Apple identity token inválido: {str(e)}",
+        )
 
 
 class AuthService:
@@ -91,6 +166,103 @@ class AuthService:
         access_token = create_access_token(str(user.id))
         refresh_token = create_refresh_token(str(user.id))
 
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        )
+
+    @staticmethod
+    async def authenticate_google(data: GoogleAuthRequest) -> TokenResponse:
+        idinfo = verify_google_id_token(data.id_token)
+        email = idinfo.get("email")
+        if not email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El token de Google no contiene un correo electrónico",
+            )
+
+        email = email.lower()
+        sub = str(idinfo.get("sub"))
+        name = idinfo.get("name") or "Usuario Google"
+
+        user = await User.find_one(User.email == email)
+        if user:
+            if user.deleted_at is not None:
+                user.deleted_at = None
+                user.is_active = True
+            if not user.provider_id:
+                user.provider_id = sub
+                user.auth_provider = "google"
+            user.is_verified = True
+            user.login_attempts = 0
+            user.locked_until = None
+            await user.save()
+        else:
+            user = User(
+                email=email,
+                name=name,
+                auth_provider="google",
+                provider_id=sub,
+                is_verified=True,
+                timezone="America/Mexico_City",
+            )
+            await user.save()
+
+        access_token = create_access_token(str(user.id))
+        refresh_token = create_refresh_token(str(user.id))
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
+            expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        )
+
+    @staticmethod
+    async def authenticate_apple(data: AppleAuthRequest) -> TokenResponse:
+        payload = await verify_apple_id_token(data.identity_token)
+        sub = str(payload.get("sub"))
+        email = payload.get("email") or data.email
+        if not email and not sub:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No se pudo obtener la identidad de Apple",
+            )
+
+        user = None
+        if sub:
+            user = await User.find_one(User.provider_id == sub)
+        if not user and email:
+            user = await User.find_one(User.email == str(email).lower())
+
+        if user:
+            if user.deleted_at is not None:
+                user.deleted_at = None
+                user.is_active = True
+            if not user.provider_id:
+                user.provider_id = sub
+                user.auth_provider = "apple"
+            if data.name and (user.name == "Usuario" or user.name == "Usuario Apple"):
+                user.name = data.name
+            user.is_verified = True
+            user.login_attempts = 0
+            user.locked_until = None
+            await user.save()
+        else:
+            user_email = (email or f"{sub}@privaterelay.appleid.com").lower()
+            user = User(
+                email=user_email,
+                name=data.name or "Usuario Apple",
+                auth_provider="apple",
+                provider_id=sub,
+                is_verified=True,
+                timezone="America/Mexico_City",
+            )
+            await user.save()
+
+        access_token = create_access_token(str(user.id))
+        refresh_token = create_refresh_token(str(user.id))
         return TokenResponse(
             access_token=access_token,
             refresh_token=refresh_token,

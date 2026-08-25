@@ -15,6 +15,16 @@ class UserLogin(BaseModel):
     password: str
 
 
+class GoogleAuthRequest(BaseModel):
+    id_token: str
+
+
+class AppleAuthRequest(BaseModel):
+    identity_token: str
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
