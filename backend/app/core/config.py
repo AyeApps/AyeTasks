@@ -20,6 +20,11 @@ class Settings(BaseSettings):
         "627799707976-dmm76mhsvc1b7d7jcrf2hpfjbtnpb6te.apps.googleusercontent.com",
         "627799707976-ek7dcu7lgfuj06us18cu5gnfuf6n3qqt.apps.googleusercontent.com",
     ]
+    APPLE_CLIENT_IDS: List[str] = [
+        "com.ayeapps.ayetasks",
+        "com.ayeapps.ayetasks.auth",
+        "com.ayeapps.ayetasks.service",
+    ]
     APPLE_BUNDLE_ID: str = "com.ayeapps.ayetasks"
 
     model_config = SettingsConfigDict(

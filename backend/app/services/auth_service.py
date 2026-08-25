@@ -74,10 +74,15 @@ async def verify_apple_id_token(token: str) -> dict:
             token,
             key,
             algorithms=["RS256"],
-            audience=settings.APPLE_BUNDLE_ID,
             issuer="https://appleid.apple.com",
-            options={"verify_at_hash": False},
+            options={"verify_at_hash": False, "verify_aud": False},
         )
+        aud = payload.get("aud")
+        if aud not in settings.APPLE_CLIENT_IDS and aud != settings.APPLE_BUNDLE_ID:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Audience de Apple identity token no autorizada: {aud}",
+            )
         return payload
     except Exception as e:
         if isinstance(e, HTTPException):

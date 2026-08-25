@@ -14,6 +14,8 @@ import { Sun, Moon, Languages, AlertCircle, UserPlus } from 'lucide-react-native
 import Svg, { Path } from 'react-native-svg';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Google from 'expo-auth-session/providers/google';
+import * as AuthSession from 'expo-auth-session';
+import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
 import { THEME } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
@@ -115,21 +117,49 @@ export const AuthScreen: React.FC = () => {
       setAuthError('');
       setIsAccountNotFound(false);
 
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
+      if (Platform.OS === 'ios' && isAppleAuthAvailable) {
+        const credential = await AppleAuthentication.signInAsync({
+          requestedScopes: [
+            AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+            AppleAuthentication.AppleAuthenticationScope.EMAIL,
+          ],
+        });
 
-      if (credential.identityToken) {
-        const fullName = credential.fullName
-          ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(' ')
-          : undefined;
-        await loginWithApple(credential.identityToken, fullName, credential.email || undefined);
+        if (credential.identityToken) {
+          const fullName = credential.fullName
+            ? [credential.fullName.givenName, credential.fullName.familyName].filter(Boolean).join(' ')
+            : undefined;
+          await loginWithApple(credential.identityToken, fullName, credential.email || undefined);
+        }
+      } else {
+        // Cross-platform Apple OAuth 2.0 Web flow for Android & Web
+        const rawNonce = await Crypto.getRandomBytesAsync(16);
+        const nonce = Array.from(rawNonce).map((b) => b.toString(16).padStart(2, '0')).join('');
+        const state = Array.from(await Crypto.getRandomBytesAsync(16)).map((b) => b.toString(16).padStart(2, '0')).join('');
+        const redirectUri = AuthSession.makeRedirectUri({ scheme: 'ayetasks' });
+
+        const serviceId = process.env.EXPO_PUBLIC_APPLE_SERVICE_ID || 'com.ayeapps.ayetasks.auth';
+        const authUrl =
+          `https://appleid.apple.com/auth/authorize?` +
+          `client_id=${encodeURIComponent(serviceId)}` +
+          `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+          `&response_type=code%20id_token` +
+          `&response_mode=form_post` +
+          `&scope=name%20email` +
+          `&state=${state}` +
+          `&nonce=${nonce}`;
+
+        const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+        if (result.type === 'success' && result.url) {
+          const urlObj = new URL(result.url.replace('#', '?'));
+          const idToken = urlObj.searchParams.get('id_token');
+          if (idToken) {
+            await loginWithApple(idToken);
+          }
+        }
       }
     } catch (err: any) {
-      if (err.code === 'ERR_REQUEST_CANCELED') {
+      if (err.code === 'ERR_REQUEST_CANCELED' || err.message?.includes('cancel') || err.message?.includes('CANCELED')) {
         return;
       }
       setAuthError(err.message || t.auth.oauthError);
@@ -549,32 +579,30 @@ export const AuthScreen: React.FC = () => {
                 </TouchableOpacity>
 
                 {/* Apple Sign In Button */}
-                {isAppleAuthAvailable ? (
-                  <TouchableOpacity
+                <TouchableOpacity
+                  style={[
+                    styles.socialBtn,
+                    {
+                      backgroundColor: isDark ? '#FFFFFF' : '#000000',
+                      borderColor: isDark ? '#FFFFFF' : '#000000',
+                      shadowColor: colors.shadowColor,
+                    },
+                    isLoading && styles.heroBtnDisabled,
+                  ]}
+                  onPress={handleAppleAuth}
+                  disabled={isLoading}
+                  activeOpacity={0.8}
+                >
+                  <AppleIcon size={18} color={isDark ? '#000000' : '#FFFFFF'} />
+                  <Text
                     style={[
-                      styles.socialBtn,
-                      {
-                        backgroundColor: isDark ? '#FFFFFF' : '#000000',
-                        borderColor: isDark ? '#FFFFFF' : '#000000',
-                        shadowColor: colors.shadowColor,
-                      },
-                      isLoading && styles.heroBtnDisabled,
+                      styles.socialBtnText,
+                      { color: isDark ? '#000000' : '#FFFFFF' },
                     ]}
-                    onPress={handleAppleAuth}
-                    disabled={isLoading}
-                    activeOpacity={0.8}
                   >
-                    <AppleIcon size={18} color={isDark ? '#000000' : '#FFFFFF'} />
-                    <Text
-                      style={[
-                        styles.socialBtnText,
-                        { color: isDark ? '#000000' : '#FFFFFF' },
-                      ]}
-                    >
-                      {t.auth.continueWithApple}
-                    </Text>
-                  </TouchableOpacity>
-                ) : null}
+                    {t.auth.continueWithApple}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
