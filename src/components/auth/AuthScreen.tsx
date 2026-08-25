@@ -88,6 +88,7 @@ export const AuthScreen: React.FC = () => {
     clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '627799707976-gt9uudejrtd5d4b7pubkso0ev35j2rhr.apps.googleusercontent.com',
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '627799707976-dmm76mhsvc1b7d7jcrf2hpfjbtnpb6te.apps.googleusercontent.com',
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || '627799707976-ek7dcu7lgfuj06us18cu5gnfuf6n3qqt.apps.googleusercontent.com',
+    redirectUri: AuthSession.makeRedirectUri({ scheme: 'ayetasks' }),
   });
 
   useEffect(() => {
