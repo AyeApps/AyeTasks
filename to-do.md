@@ -1,7 +1,8 @@
 # 📋 AyeTasks — Plan de Trabajo y Lista de Tareas (To-Do)
 
 **Fecha de actualización:** 25 de Agosto, 2026  
-**Proyecto:** AyeTasks (iOS & Android)  
+**Proyecto:** AyeTasks (Web, iOS & Android)  
+**Frontend Web Oficial:** `https://tasks.ayeapps.com`  
 **Dominio Oficial API:** `https://api-aytsks.ayeapps.com/api/v1`  
 **WebSockets:** `wss://api-aytsks.ayeapps.com/api/v1/ws/sync`  
 **Organización:** AyeApps (`ayeapps.services@gmail.com`)
@@ -10,7 +11,11 @@
 
 ## ✅ Completado
 
-### 1. Infraestructura y Backend en Producción
+### 1. Frontend Web en Producción (Cloudflare Pages)
+- [x] **Deploy en la Red Global de Cloudflare:** `tasks.ayeapps.com` desplegado en la red Edge de Cloudflare con SSL automático, compresión Brotli/Gzip y CDN global.
+- [x] **CI/CD Automático en GitHub:** Cada commit en la rama `main` compila y publica automáticamente la versión web de Expo.
+
+### 2. Infraestructura y Backend en Producción
 - [x] **Base de Datos:** MongoDB Atlas Cluster (`AyeAppsCluster`) configurado y conectado con usuario de servicio `ayeapps_railway_ayetasks`.
 - [x] **Backend FastAPI:** Desplegado en Railway con puerto dinámico, HSTS y optimizaciones de latencia (respuesta en ~0.0003s).
 - [x] **Dominio y Red Cloudflare:**
@@ -19,7 +24,7 @@
   - Transferencia segura de `fatimaresendiz.com` completada.
 - [x] **WebSockets en Tiempo Real:** Canal `/ws/sync` para sincronización bidireccional inmediata de tareas, conexiones y tiempos.
 
-### 2. Autenticación y Cuentas
+### 3. Autenticación y Cuentas
 - [x] **Autenticación Local:** Registro, login, refresh tokens con rotación, borrado seguro de cuentas y recuperación.
 - [x] **Google Sign-In:**
   - Client IDs generados para Web, iOS y Android en Google Cloud Console.
@@ -27,10 +32,10 @@
   - Botón cyber-brutalist integrado en frontend.
 - [x] **Apple Sign-In (Cross-Platform):**
   - Flujo nativo en iOS con Face ID / Touch ID (`expo-apple-authentication`).
-  - Flujo web OAuth para Android (`expo-auth-session` / `expo-crypto`).
+  - Flujo web OAuth para Android y Web (`expo-auth-session` / `expo-crypto`).
   - Validación de JWT con llaves públicas oficiales de Apple (`https://appleid.apple.com/auth/keys`).
 
-### 3. App Store Connect & iOS
+### 4. App Store Connect & iOS
 - [x] **Ficha de la App:** Creada en App Store Connect (`AyeTasks` / `com.ayeapps.ayetasks`).
 - [x] **Entitlements:** Capacidad `com.apple.developer.applesignin` inyectada en el proyecto.
 - [x] **Exención de Criptografía:** `ITSAppUsesNonExemptEncryption: false` configurado.
