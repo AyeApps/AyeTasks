@@ -1,0 +1,27 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=AyeTasks
+      - APP_ENV=development
+      - PORT=8000
+      - MONGODB_URL=mongodb://mongodb:27017/ayetasks
+      - JWT_SECRET_KEY=ayetasks_super_secret_jwt_key_fatimaweb_level_64_characters_production_ready_token_key_2026
+      - CORS_ORIGINS=["*"]
+    depends_on:
+      - mongodb
+    volumes:
+      - .:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  mongodb:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
