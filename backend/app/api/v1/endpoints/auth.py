@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Depends, Header, Request, status
+from fastapi import APIRouter, Depends, Form, Header, Request, status
+from fastapi.responses import RedirectResponse
 from typing import Optional
+import json
 from app.core.deps import CurrentUser
 from app.core.limiter import limiter
 from app.schemas.auth import (
@@ -48,6 +50,37 @@ async def google_auth(request: Request, data: GoogleAuthRequest):
 @limiter.limit("15/minute")
 async def apple_auth(request: Request, data: AppleAuthRequest):
     return await AuthService.authenticate_apple(data)
+
+
+@router.post("/oauth/apple/callback")
+async def apple_callback(
+    code: Optional[str] = Form(None),
+    id_token: Optional[str] = Form(None),
+    user: Optional[str] = Form(None),
+    state: Optional[str] = Form(None),
+):
+    if not id_token:
+        return RedirectResponse(url="https://tasks.ayeapps.com/?error=apple_auth_failed", status_code=303)
+
+    user_name = None
+    user_email = None
+    if user:
+        try:
+            user_data = json.loads(user)
+            name_data = user_data.get("name", {})
+            user_name = f"{name_data.get('firstName', '')} {name_data.get('lastName', '')}".strip() or None
+            user_email = user_data.get("email")
+        except Exception:
+            pass
+
+    auth_request = AppleAuthRequest(
+        identity_token=id_token,
+        name=user_name,
+        email=user_email,
+    )
+    tokens = await AuthService.authenticate_apple(auth_request)
+    redirect_url = f"https://tasks.ayeapps.com/#access_token={tokens.access_token}&refresh_token={tokens.refresh_token}"
+    return RedirectResponse(url=redirect_url, status_code=303)
 
 
 @router.post("/refresh", response_model=TokenResponse)

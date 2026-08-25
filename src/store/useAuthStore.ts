@@ -63,6 +63,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initAuth: async () => {
     set({ isInitializing: true, error: null });
     try {
+      // Check for OAuth tokens in URL hash or query string (e.g. from Apple redirect)
+      if (typeof window !== 'undefined' && (window.location?.hash || window.location?.search)) {
+        try {
+          const hashString = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : '';
+          const searchString = window.location.search.startsWith('?') ? window.location.search.substring(1) : '';
+          const hashParams = new URLSearchParams(hashString);
+          const searchParams = new URLSearchParams(searchString);
+
+          const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
+
+          if (accessToken && refreshToken) {
+            await authStorage.setTokens(accessToken, refreshToken);
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        } catch {}
+      }
+
       const token = await authStorage.getAccessToken();
       if (token) {
         try {

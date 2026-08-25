@@ -137,23 +137,28 @@ export const AuthScreen: React.FC = () => {
         const rawNonce = await Crypto.getRandomBytesAsync(16);
         const nonce = Array.from(rawNonce).map((b) => b.toString(16).padStart(2, '0')).join('');
         const state = Array.from(await Crypto.getRandomBytesAsync(16)).map((b) => b.toString(16).padStart(2, '0')).join('');
-        const redirectUri = AuthSession.makeRedirectUri({ scheme: 'ayetasks' });
-
+        const callbackUrl = 'https://api-aytsks.ayeapps.com/api/v1/auth/oauth/apple/callback';
         const serviceId = process.env.EXPO_PUBLIC_APPLE_SERVICE_ID || 'com.ayeapps.ayetasks.auth';
+
         const authUrl =
           `https://appleid.apple.com/auth/authorize?` +
           `client_id=${encodeURIComponent(serviceId)}` +
-          `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+          `&redirect_uri=${encodeURIComponent(callbackUrl)}` +
           `&response_type=code%20id_token` +
           `&response_mode=form_post` +
           `&scope=name%20email` +
           `&state=${state}` +
           `&nonce=${nonce}`;
 
-        const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+        if (Platform.OS === 'web' && typeof window !== 'undefined') {
+          window.location.href = authUrl;
+          return;
+        }
+
+        const result = await WebBrowser.openAuthSessionAsync(authUrl, callbackUrl);
         if (result.type === 'success' && result.url) {
           const urlObj = new URL(result.url.replace('#', '?'));
-          const idToken = urlObj.searchParams.get('id_token');
+          const idToken = urlObj.searchParams.get('id_token') || urlObj.searchParams.get('access_token');
           if (idToken) {
             await loginWithApple(idToken);
           }
