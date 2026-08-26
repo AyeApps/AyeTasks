@@ -29,6 +29,7 @@ import { useUIStore } from '../../store/useUIStore';
 import { useTranslation } from '../../store/useLanguageStore';
 import { formatDateISO, getMondayOfWeek, getWeekDays } from '../../utils/dateUtils';
 import { WorkShiftWidget } from './WorkShiftWidget';
+import { AyeLogo } from '../ui/AyeLogo';
 
 const MONTH_NAMES_EN = [
   'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
@@ -191,7 +192,7 @@ export const WeekHeader: React.FC = () => {
                 },
               ]}
             >
-              <Text style={[styles.logoBadgeText, { color: colors.textInvert }]}>AyeTasks</Text>
+              <AyeLogo width={32} color={colors.textInvert} />
             </View>
 
             <View style={styles.brandMeta}>
@@ -755,8 +756,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   logoBadge: {
-    paddingHorizontal: 11,
+    paddingHorizontal: 8,
     paddingVertical: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: THEME.borders.thick,
     shadowOffset: { width: 3, height: 3 },
     shadowOpacity: 1,

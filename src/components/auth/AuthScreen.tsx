@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   Platform,
   StyleSheet,
   Text,
@@ -21,6 +22,8 @@ import { THEME } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useTranslation } from '../../store/useLanguageStore';
+import { AyeLogo } from '../ui/AyeLogo';
+import { api } from '../../services/api';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -73,6 +76,40 @@ export const AuthScreen: React.FC = () => {
   const [isAccountNotFound, setIsAccountNotFound] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isAppleAuthAvailable, setIsAppleAuthAvailable] = useState(Platform.OS === 'ios');
+  const [serverStatus, setServerStatus] = useState<'online' | 'offline' | 'checking'>('checking');
+
+  const checkStatus = React.useCallback(async () => {
+    setServerStatus('checking');
+    try {
+      const isHealthy = await api.checkHealth();
+      setServerStatus(isHealthy ? 'online' : 'offline');
+    } catch {
+      setServerStatus('offline');
+    }
+  }, []);
+
+  useEffect(() => {
+    checkStatus();
+
+    // Event-driven triggers: Zero polling!
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const handleOnline = () => checkStatus();
+      const handleOffline = () => setServerStatus('offline');
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
+    } else {
+      const subscription = AppState.addEventListener('change', (nextAppState) => {
+        if (nextAppState === 'active') {
+          checkStatus();
+        }
+      });
+      return () => subscription.remove();
+    }
+  }, [checkStatus]);
 
   useEffect(() => {
     if (Platform.OS === 'ios') {
@@ -307,27 +344,63 @@ export const AuthScreen: React.FC = () => {
             isMobile && styles.techFrameMobile,
           ]}
         >
-          {/* Tech Badge */}
-          <View
+          {/* Tech Badge / Live Server Health Status */}
+          <TouchableOpacity
             style={[
               styles.techBadge,
               {
                 backgroundColor: colors.bgBase,
-                borderColor: colors.borderColor,
+                borderColor:
+                  serverStatus === 'online'
+                    ? colors.accent
+                    : serverStatus === 'checking'
+                    ? colors.accentWarning
+                    : colors.borderColor,
               },
             ]}
+            onPress={checkStatus}
+            activeOpacity={0.7}
           >
-            <Text style={[styles.techBadgeText, { color: colors.textPrimary }]}>
-              {t.auth.statusOffline}
+            <View
+              style={[
+                styles.statusDot,
+                {
+                  backgroundColor:
+                    serverStatus === 'online'
+                      ? colors.accent
+                      : serverStatus === 'checking'
+                      ? colors.accentWarning
+                      : colors.accentDanger,
+                },
+              ]}
+            />
+            <Text
+              style={[
+                styles.techBadgeText,
+                {
+                  color:
+                    serverStatus === 'online'
+                      ? colors.accent
+                      : serverStatus === 'checking'
+                      ? colors.accentWarning
+                      : colors.textSecondary,
+                },
+              ]}
+            >
+              {serverStatus === 'online'
+                ? t.auth.serverOnline
+                : serverStatus === 'checking'
+                ? t.auth.serverChecking
+                : t.auth.serverOffline}
             </Text>
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.techFrameContent}>
             {/* Title Section */}
             <View style={styles.titleSection}>
-              <Text style={[styles.secureAccessText, { color: colors.textSecondary }]}>
-                {t.auth.secureAccess}
-              </Text>
+              <View style={styles.authLogoBox}>
+                <AyeLogo width={56} color={colors.accent} />
+              </View>
               <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>
                 {t.auth.title}
               </Text>
@@ -684,14 +757,23 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -14,
     left: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
     paddingHorizontal: 12,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderWidth: THEME.borders.thick,
   },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+  },
   techBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '900',
     letterSpacing: 1.2,
+    fontFamily: THEME.fonts.mono,
     textTransform: 'uppercase',
   },
   techFrameContent: {
@@ -701,12 +783,9 @@ const styles = StyleSheet.create({
   titleSection: {
     marginBottom: 24,
   },
-  secureAccessText: {
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 2,
-    marginBottom: 6,
-    textTransform: 'uppercase',
+  authLogoBox: {
+    marginBottom: 16,
+    alignItems: 'flex-start',
   },
   heroTitle: {
     fontSize: 36,

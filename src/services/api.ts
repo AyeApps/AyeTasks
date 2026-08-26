@@ -143,4 +143,26 @@ export const api = {
     apiRequest<any>('/time/start', { method: 'POST', body: JSON.stringify({ task_id: taskId, mode }) }),
   stopTimer: (taskId?: string, notes?: string) =>
     apiRequest<any>('/time/stop', { method: 'POST', body: JSON.stringify({ task_id: taskId, notes }) }),
+
+  // Health Check
+  checkHealth: async (): Promise<boolean> => {
+    const baseUrl = getApiBaseUrl();
+    const healthUrl = baseUrl.endsWith('/api/v1')
+      ? `${baseUrl.replace('/api/v1', '')}/health`
+      : `${baseUrl}/health`;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      const res = await fetch(healthUrl, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
 };

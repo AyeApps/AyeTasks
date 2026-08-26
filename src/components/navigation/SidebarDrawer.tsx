@@ -25,6 +25,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useTheme } from '../../hooks/useTheme';
 import { useUIStore } from '../../store/useUIStore';
 import { useTranslation } from '../../store/useLanguageStore';
+import { AyeLogo } from '../ui/AyeLogo';
 
 export const SidebarDrawer: React.FC = () => {
   const { width } = useWindowDimensions();
@@ -114,7 +115,7 @@ export const SidebarDrawer: React.FC = () => {
                   },
                 ]}
               >
-                <Text style={[styles.logoBadgeText, { color: colors.textInvert }]}>AyeTasks</Text>
+                <AyeLogo width={34} color={colors.textInvert} />
               </View>
 
               <View style={styles.brandTextGroup}>
@@ -414,8 +415,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   logoBadge: {
-    paddingHorizontal: 9,
+    paddingHorizontal: 8,
     paddingVertical: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: THEME.borders.thick,
     shadowOffset: { width: 2, height: 2 },
     shadowOpacity: 1,
