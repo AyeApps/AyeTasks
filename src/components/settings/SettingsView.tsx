@@ -496,7 +496,7 @@ export const SettingsView: React.FC = () => {
                     {
                       backgroundColor:
                         syncStatus === 'synced'
-                          ? colors.accent
+                          ? colors.accentSuccess
                           : syncStatus === 'syncing'
                           ? (isDark ? '#00e5ff' : '#0284c7')
                           : syncStatus === 'pending'
@@ -531,13 +531,13 @@ export const SettingsView: React.FC = () => {
                   {
                     borderColor:
                       justSynced || syncStatus === 'synced'
-                        ? colors.accent
+                        ? colors.accentSuccess
                         : syncStatus === 'pending'
                         ? colors.accentWarning
                         : colors.borderColor,
                     backgroundColor:
                       justSynced || syncStatus === 'synced'
-                        ? colors.accentSubtle
+                        ? colors.accentSuccessSubtle
                         : syncStatus === 'pending'
                         ? colors.accentWarningSubtle
                         : colors.bgBase,
@@ -551,7 +551,7 @@ export const SettingsView: React.FC = () => {
                   size={13}
                   color={
                     justSynced || syncStatus === 'synced'
-                      ? colors.accent
+                      ? colors.accentSuccess
                       : syncStatus === 'pending'
                       ? colors.accentWarning
                       : colors.textPrimary
@@ -563,7 +563,7 @@ export const SettingsView: React.FC = () => {
                     {
                       color:
                         justSynced || syncStatus === 'synced'
-                          ? colors.accent
+                          ? colors.accentSuccess
                           : syncStatus === 'pending'
                           ? colors.accentWarning
                           : colors.textPrimary,

@@ -352,7 +352,7 @@ export const AuthScreen: React.FC = () => {
                 backgroundColor: colors.bgBase,
                 borderColor:
                   serverStatus === 'online'
-                    ? colors.accent
+                    ? colors.accentSuccess
                     : serverStatus === 'checking'
                     ? colors.accentWarning
                     : colors.borderColor,
@@ -367,7 +367,7 @@ export const AuthScreen: React.FC = () => {
                 {
                   backgroundColor:
                     serverStatus === 'online'
-                      ? colors.accent
+                      ? colors.accentSuccess
                       : serverStatus === 'checking'
                       ? colors.accentWarning
                       : colors.accentDanger,
@@ -380,7 +380,7 @@ export const AuthScreen: React.FC = () => {
                 {
                   color:
                     serverStatus === 'online'
-                      ? colors.accent
+                      ? colors.accentSuccess
                       : serverStatus === 'checking'
                       ? colors.accentWarning
                       : colors.textSecondary,

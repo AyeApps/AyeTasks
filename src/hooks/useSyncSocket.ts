@@ -7,8 +7,8 @@ import { useTimerStore } from '../store/useTimerStore';
 import { useUIStore } from '../store/useUIStore';
 
 export function getWsBaseUrl(): string {
-  let url = process.env.EXPO_PUBLIC_WS_URL || 'ws://localhost:8000/api/v1/ws/sync';
-  if (Platform.OS === 'android') {
+  let url = process.env.EXPO_PUBLIC_WS_URL || 'wss://api-aytsks.ayeapps.com/api/v1/ws/sync';
+  if (Platform.OS === 'android' && url.includes('localhost')) {
     url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
   }
   return url;

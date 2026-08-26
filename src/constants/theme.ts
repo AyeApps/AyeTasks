@@ -17,6 +17,11 @@ export interface ThemeColors {
   accent: string;
   accentHover: string;
   accentSubtle: string;
+
+  accentSuccess: string;
+  accentSuccessHover: string;
+  accentSuccessSubtle: string;
+
   accentDanger: string;
   accentDangerSubtle: string;
   accentWarning: string;
@@ -40,15 +45,20 @@ export const DARK_THEME: ThemeColors = {
 
   borderColor: '#ffffff',
   borderMuted: '#2a2a2a',
-  borderAccent: '#00c853',
+  borderAccent: '#FE9D01',
 
-  accent: '#00c853',
-  accentHover: '#00e676',
-  accentSubtle: '#0a2e16',
+  accent: '#FE9D01',
+  accentHover: '#FFAF20',
+  accentSubtle: '#2D1A00',
+
+  accentSuccess: '#00e676',
+  accentSuccessHover: '#00c853',
+  accentSuccessSubtle: '#0a2e16',
+
   accentDanger: '#ff1744',
   accentDangerSubtle: '#2d0a0f',
-  accentWarning: '#ffab00',
-  accentWarningSubtle: '#2a1c05',
+  accentWarning: '#FFD600',
+  accentWarningSubtle: '#2A2405',
 
   textPrimary: '#ffffff',
   textInvert: '#000000',
@@ -68,11 +78,16 @@ export const LIGHT_THEME: ThemeColors = {
 
   borderColor: '#000000',
   borderMuted: '#cccccc',
-  borderAccent: '#00c853',
+  borderAccent: '#E68A00',
 
-  accent: '#00c853',
-  accentHover: '#00b248',
-  accentSubtle: '#e8f8ee',
+  accent: '#E68A00',
+  accentHover: '#D47D00',
+  accentSubtle: '#FFF3E0',
+
+  accentSuccess: '#00c853',
+  accentSuccessHover: '#00b248',
+  accentSuccessSubtle: '#e8f8ee',
+
   accentDanger: '#d50000',
   accentDangerSubtle: '#fee2e2',
   accentWarning: '#e65100',

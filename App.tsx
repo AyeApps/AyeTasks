@@ -96,9 +96,9 @@ export default function App() {
 
         /* 5. Completion Ripple Burst */
         @keyframes completeGreenBurst {
-          0% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(0, 200, 83, 0.8); }
-          40% { transform: scale(1.02); box-shadow: 0 0 22px 6px rgba(0, 200, 83, 0.5); }
-          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 200, 83, 0); }
+          0% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(254, 157, 1, 0.85); }
+          40% { transform: scale(1.02); box-shadow: 0 0 22px 6px rgba(254, 157, 1, 0.55); }
+          100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(254, 157, 1, 0); }
         }
 
         /* 6. Card Entrance & Exit Motion */

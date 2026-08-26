@@ -16,7 +16,7 @@ export interface AyeLogoProps {
 export const AyeLogo: React.FC<AyeLogoProps> = ({
   width = 42,
   height,
-  color = '#00E676',
+  color = '#FE9D01',
   style,
 }) => {
   const calculatedHeight = height || Math.round(width / 1.739);

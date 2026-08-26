@@ -3,9 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authStorage } from './authStorage';
 
 export function getApiBaseUrl(): string {
-  let url = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-  // On Android emulator/devices, localhost is the phone itself. Route to host machine (10.0.2.2 for emulator).
-  if (Platform.OS === 'android') {
+  let url = process.env.EXPO_PUBLIC_API_URL || 'https://api-aytsks.ayeapps.com/api/v1';
+  // On Android emulator/devices in local development, route localhost to 10.0.2.2
+  if (Platform.OS === 'android' && url.includes('localhost')) {
     url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
   }
   return url;

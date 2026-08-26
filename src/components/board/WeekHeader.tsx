@@ -238,7 +238,7 @@ export const WeekHeader: React.FC = () => {
                 {
                   borderColor:
                     syncStatus === 'synced'
-                      ? colors.accent
+                      ? colors.accentSuccess
                       : syncStatus === 'syncing'
                       ? (isDark ? '#00e5ff' : '#0284c7')
                       : syncStatus === 'pending'
@@ -246,7 +246,7 @@ export const WeekHeader: React.FC = () => {
                       : colors.borderMuted,
                   backgroundColor:
                     syncStatus === 'synced'
-                      ? colors.accentSubtle
+                      ? colors.accentSuccessSubtle
                       : syncStatus === 'syncing'
                       ? (isDark ? '#082530' : '#e0f2fe')
                       : syncStatus === 'pending'
@@ -267,7 +267,7 @@ export const WeekHeader: React.FC = () => {
                   {
                     backgroundColor:
                       syncStatus === 'synced'
-                        ? colors.accent
+                        ? colors.accentSuccess
                         : syncStatus === 'syncing'
                         ? (isDark ? '#00e5ff' : '#0284c7')
                         : syncStatus === 'pending'
@@ -282,7 +282,7 @@ export const WeekHeader: React.FC = () => {
                   {
                     color:
                       syncStatus === 'synced'
-                        ? colors.accent
+                        ? colors.accentSuccess
                         : syncStatus === 'syncing'
                         ? (isDark ? '#00e5ff' : '#0284c7')
                         : syncStatus === 'pending'
