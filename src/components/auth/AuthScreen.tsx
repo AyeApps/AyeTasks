@@ -295,6 +295,7 @@ export const AuthScreen: React.FC = () => {
               borderColor: colors.borderColor,
               backgroundColor: colors.bgSurface,
               shadowColor: colors.shadowColor,
+              ...(Platform.OS === 'web' ? { boxShadow: `3px 3px 0px 0px ${colors.shadowColor}` } : {}),
             },
           ]}
           onPress={toggleLanguage}
@@ -313,6 +314,7 @@ export const AuthScreen: React.FC = () => {
               borderColor: colors.borderColor,
               backgroundColor: colors.bgSurface,
               shadowColor: colors.shadowColor,
+              ...(Platform.OS === 'web' ? { boxShadow: `3px 3px 0px 0px ${colors.shadowColor}` } : {}),
             },
           ]}
           onPress={toggleTheme}
@@ -340,6 +342,7 @@ export const AuthScreen: React.FC = () => {
               backgroundColor: colors.bgBase,
               borderColor: colors.borderColor,
               shadowColor: colors.shadowColor,
+              ...(Platform.OS === 'web' ? { boxShadow: `12px 12px 0px 0px ${colors.shadowColor}` } : {}),
             },
             isMobile && styles.techFrameMobile,
           ]}
@@ -564,6 +567,7 @@ export const AuthScreen: React.FC = () => {
                         borderColor: colors.accentWarning,
                         backgroundColor: colors.bgBase,
                         shadowColor: colors.shadowColor,
+                        ...(Platform.OS === 'web' ? { boxShadow: `2px 2px 0px 0px ${colors.accentWarning}` } : {}),
                       },
                     ]}
                     onPress={() => {
@@ -604,6 +608,7 @@ export const AuthScreen: React.FC = () => {
                     backgroundColor: colors.accent,
                     borderColor: colors.borderColor,
                     shadowColor: colors.shadowColor,
+                    ...(Platform.OS === 'web' ? { boxShadow: `4px 4px 0px 0px ${colors.shadowColor}` } : {}),
                   },
                   isLoading && styles.heroBtnDisabled,
                 ]}
@@ -644,6 +649,7 @@ export const AuthScreen: React.FC = () => {
                       backgroundColor: colors.bgBase,
                       borderColor: colors.borderColor,
                       shadowColor: colors.shadowColor,
+                      ...(Platform.OS === 'web' ? { boxShadow: `3px 3px 0px 0px ${colors.shadowColor}` } : {}),
                     },
                     isLoading && styles.heroBtnDisabled,
                   ]}
@@ -665,6 +671,7 @@ export const AuthScreen: React.FC = () => {
                       backgroundColor: isDark ? '#FFFFFF' : '#000000',
                       borderColor: isDark ? '#FFFFFF' : '#000000',
                       shadowColor: colors.shadowColor,
+                      ...(Platform.OS === 'web' ? { boxShadow: `3px 3px 0px 0px ${colors.shadowColor}` } : {}),
                     },
                     isLoading && styles.heroBtnDisabled,
                   ]}
