@@ -113,8 +113,8 @@ run_ios() {
 }
 
 start_metro() {
-  header "Iniciando Metro Bundler (Development Client)..."
-  npx expo start --dev-client
+  header "Iniciando Metro Bundler en puerto 8081 (Development Client)..."
+  npx expo start --dev-client --port 8081
 }
 
 clean_prebuild() {
