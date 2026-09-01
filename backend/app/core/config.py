@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     DATABASE_NAME: str = "ayetasks"
     MONGODB_CERT_B64: str = ""
     MONGODB_CERT_PATH: str = ""
-    JWT_SECRET_KEY: str
+    JWT_SECRET_KEY: str = "super_secure_secret_key_minimum_32_characters_for_ayeapps_atelier"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30

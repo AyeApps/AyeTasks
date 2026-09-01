@@ -23,7 +23,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useTranslation } from '../../store/useLanguageStore';
 import { AyeLogo } from '../ui/AyeLogo';
-import { api } from '../../services/api';
+import { api, getAuthApiBaseUrl } from '../../services/api';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -119,6 +119,16 @@ export const AuthScreen: React.FC = () => {
     } else {
       setIsAppleAuthAvailable(false);
     }
+
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      if (!document.getElementById('apple-auth-sdk')) {
+        const script = document.createElement('script');
+        script.id = 'apple-auth-sdk';
+        script.src = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js';
+        script.async = true;
+        document.head.appendChild(script);
+      }
+    }
   }, []);
 
   const [googleRequest, googleResponse, promptGoogleAsync] = Google.useIdTokenAuthRequest({
@@ -169,12 +179,34 @@ export const AuthScreen: React.FC = () => {
             : undefined;
           await loginWithApple(credential.identityToken, fullName, credential.email || undefined);
         }
+      } else if (Platform.OS === 'web' && typeof window !== 'undefined' && (window as any).AppleID?.auth) {
+        const appleAuth = (window as any).AppleID.auth;
+        const origin = window.location.origin;
+        const serviceId = process.env.EXPO_PUBLIC_APPLE_SERVICE_ID || 'com.ayeapps.ayetasks.auth';
+        appleAuth.init({
+          clientId: serviceId,
+          scope: 'name email',
+          redirectURI: origin,
+          usePopup: true,
+        });
+        const response = await appleAuth.signIn();
+        if (response?.authorization?.id_token) {
+          const fullName = response.user?.name
+            ? [response.user.name.firstName, response.user.name.lastName].filter(Boolean).join(' ')
+            : undefined;
+          await loginWithApple(response.authorization.id_token, fullName, response.user?.email || undefined);
+        }
       } else {
-        // Cross-platform Apple OAuth 2.0 Web flow for Android & Web
+        // Cross-platform Apple OAuth 2.0 Web flow for Android & Fallback
         const rawNonce = await Crypto.getRandomBytesAsync(16);
         const nonce = Array.from(rawNonce).map((b) => b.toString(16).padStart(2, '0')).join('');
-        const state = Array.from(await Crypto.getRandomBytesAsync(16)).map((b) => b.toString(16).padStart(2, '0')).join('');
-        const callbackUrl = 'https://api-aytsks.ayeapps.com/api/v1/auth/oauth/apple/callback';
+        const statePayload = JSON.stringify({
+          origin: typeof window !== 'undefined' ? window.location.origin : 'https://tasks.ayeapps.com',
+          app: 'tasks',
+          nonce,
+        });
+        const state = encodeURIComponent(statePayload);
+        const callbackUrl = `${getAuthApiBaseUrl()}/auth/oauth/apple/callback`;
         const serviceId = process.env.EXPO_PUBLIC_APPLE_SERVICE_ID || 'com.ayeapps.ayetasks.auth';
 
         const authUrl =
@@ -202,7 +234,7 @@ export const AuthScreen: React.FC = () => {
         }
       }
     } catch (err: any) {
-      if (err.code === 'ERR_REQUEST_CANCELED' || err.message?.includes('cancel') || err.message?.includes('CANCELED')) {
+      if (err.code === 'ERR_REQUEST_CANCELED' || err.error === 'popup_closed_by_user' || err.message?.includes('cancel') || err.message?.includes('CANCELED')) {
         return;
       }
       setAuthError(err.message || t.auth.oauthError);

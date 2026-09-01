@@ -3,6 +3,7 @@ import {
   Modal,
   Platform,
   SafeAreaView,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -157,7 +158,11 @@ export const SidebarDrawer: React.FC = () => {
           {/* ─────────────────────────────────────────────────────────────
               NAVIGATION ITEMS
              ───────────────────────────────────────────────────────────── */}
-          <View style={styles.drawerBody}>
+          <ScrollView
+            style={styles.drawerBody}
+            contentContainerStyle={styles.drawerBodyContent}
+            showsVerticalScrollIndicator={false}
+          >
             <Text style={[styles.navSectionLabel, { color: colors.textMuted }]}>
               {t.sidebar.menu}
             </Text>
@@ -246,7 +251,7 @@ export const SidebarDrawer: React.FC = () => {
                 color={viewMode === 'settings' ? colors.accent : colors.textMuted}
               />
             </TouchableOpacity>
-          </View>
+          </ScrollView>
 
           {/* ─────────────────────────────────────────────────────────────
               OPERATOR FOOTER & LOGOUT (HASTA ABAJO)
@@ -461,6 +466,8 @@ const styles = StyleSheet.create({
   },
   drawerBody: {
     flex: 1,
+  },
+  drawerBodyContent: {
     paddingHorizontal: 16,
     paddingVertical: 18,
   },

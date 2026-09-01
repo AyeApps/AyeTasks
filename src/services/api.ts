@@ -118,12 +118,34 @@ async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Pr
 
 export const api = {
   // Auth (Centralized in aye-auth)
-  register: (data: any) => apiRequest<any>('/auth/register', { method: 'POST', body: JSON.stringify(data), isAuthService: true, requiresAuth: false }),
-  login: (data: any) => apiRequest<any>('/auth/login', { method: 'POST', body: JSON.stringify(data), isAuthService: true, requiresAuth: false }),
+  register: (data: any) =>
+    apiRequest<any>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ ...data, app_client: 'tasks' }),
+      isAuthService: true,
+      requiresAuth: false,
+    }),
+  login: (data: any) =>
+    apiRequest<any>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ ...data, app_client: 'tasks' }),
+      isAuthService: true,
+      requiresAuth: false,
+    }),
   loginWithGoogle: (idToken: string) =>
-    apiRequest<any>('/auth/oauth/google', { method: 'POST', body: JSON.stringify({ id_token: idToken }), isAuthService: true, requiresAuth: false }),
+    apiRequest<any>('/auth/oauth/google', {
+      method: 'POST',
+      body: JSON.stringify({ id_token: idToken, app_client: 'tasks' }),
+      isAuthService: true,
+      requiresAuth: false,
+    }),
   loginWithApple: (identityToken: string, name?: string, email?: string) =>
-    apiRequest<any>('/auth/oauth/apple', { method: 'POST', body: JSON.stringify({ identity_token: identityToken, name, email }), isAuthService: true, requiresAuth: false }),
+    apiRequest<any>('/auth/oauth/apple', {
+      method: 'POST',
+      body: JSON.stringify({ identity_token: identityToken, name, email, app_client: 'tasks' }),
+      isAuthService: true,
+      requiresAuth: false,
+    }),
   logout: () => apiRequest<void>('/auth/logout', { method: 'DELETE', isAuthService: true }),
   deleteAccount: () => apiRequest<void>('/auth/me', { method: 'DELETE', isAuthService: true }),
   getMe: () => apiRequest<any>('/auth/me', { isAuthService: true }),

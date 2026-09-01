@@ -8,7 +8,7 @@ services:
       - APP_ENV=development
       - PORT=8000
       - MONGODB_URL=mongodb://mongodb:27017/ayetasks
-      - JWT_SECRET_KEY=ayetasks_super_secret_jwt_key_fatimaweb_level_64_characters_production_ready_token_key_2026
+      - JWT_SECRET_KEY=super_secure_secret_key_minimum_32_characters_for_ayeapps_atelier
       - CORS_ORIGINS=["*"]
     depends_on:
       - mongodb

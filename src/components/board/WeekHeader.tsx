@@ -381,7 +381,7 @@ export const WeekHeader: React.FC = () => {
                     style={[styles.userName, { color: colors.textPrimary }]}
                     numberOfLines={1}
                   >
-                    {(user.name || user.email.split('@')[0]).toUpperCase()}
+                    {(user?.name || user?.email?.split('@')[0] || 'USUARIO').toUpperCase()}
                   </Text>
                 ) : null}
                 <ChevronDown size={14} color={colors.textSecondary} />
@@ -407,12 +407,12 @@ export const WeekHeader: React.FC = () => {
                   >
                     <View style={[styles.popoverHeader, { borderBottomColor: colors.borderMuted }]}>
                       <Text style={[styles.popoverUserName, { color: colors.textPrimary }]}>
-                      {user.name.toUpperCase()}
-                    </Text>
-                    <Text style={[styles.popoverUserEmail, { color: colors.textSecondary }]}>
-                      {user.email}
-                    </Text>
-                  </View>
+                        {(user?.name || user?.email || 'USUARIO').toUpperCase()}
+                      </Text>
+                      <Text style={[styles.popoverUserEmail, { color: colors.textSecondary }]}>
+                        {user?.email || ''}
+                      </Text>
+                    </View>
 
                     <TouchableOpacity
                       style={[

@@ -30,9 +30,22 @@ async def websocket_sync_endpoint(
             await websocket.close(code=1008)
             return
         user = await User.get(user_id)
-        if not user or user.deleted_at is not None or not user.is_active:
-            await websocket.close(code=1008)
-            return
+        if user:
+            if user.deleted_at is not None or not user.is_active:
+                await websocket.close(code=1008)
+                return
+        else:
+            # Auto-provision user from aye-auth central JWT
+            user = User(
+                id=user_id,
+                email=payload.get("email", "user@ayeapps.com"),
+                name=payload.get("name", "Usuario"),
+                is_active=True,
+            )
+            try:
+                await user.insert()
+            except Exception:
+                pass
     except Exception:
         await websocket.close(code=1008)
         return
