@@ -36,6 +36,7 @@ async def init_db():
         client_kwargs["tls"] = True
         client_kwargs["tlsCertificateKeyFile"] = cert_path
         client_kwargs["authMechanism"] = "MONGODB-X509"
+        client_kwargs["authSource"] = "$external"
         logger.info(f"Connecting to MongoDB with X.509 Certificate ({cert_path})...")
     else:
         logger.info(f"Connecting to MongoDB at {settings.MONGODB_URL.split('@')[-1]}...")
