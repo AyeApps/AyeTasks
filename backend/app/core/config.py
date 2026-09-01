@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     PORT: int = 8000
     MONGODB_URL: str = "mongodb://localhost:27017/ayetasks"
+    DATABASE_NAME: str = "ayetasks"
+    MONGODB_CERT_B64: str = ""
+    MONGODB_CERT_PATH: str = ""
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
