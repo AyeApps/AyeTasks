@@ -46,12 +46,30 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user = await User.get(user_id)
-    if not user or user.deleted_at is not None or not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuario inactivo o no encontrado",
-        )
+    try:
+        user = await User.get(user_id)
+        if user:
+            if user.deleted_at is not None or not user.is_active:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Usuario inactivo o no encontrado",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            return user
+    except Exception:
+        pass
+
+    # Seamless auto-provisioning from aye-auth central JWT
+    user = User(
+        id=user_id,
+        email=payload.get("email", "user@ayeapps.com"),
+        name=payload.get("name", "Usuario"),
+        is_active=True,
+    )
+    try:
+        await user.insert()
+    except Exception:
+        pass
 
     return user
 

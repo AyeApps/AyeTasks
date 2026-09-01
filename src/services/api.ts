@@ -4,7 +4,14 @@ import { authStorage } from './authStorage';
 
 export function getApiBaseUrl(): string {
   let url = process.env.EXPO_PUBLIC_API_URL || 'https://api-aytsks.ayeapps.com/api/v1';
-  // On Android emulator/devices in local development, route localhost to 10.0.2.2
+  if (Platform.OS === 'android' && url.includes('localhost')) {
+    url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
+  }
+  return url;
+}
+
+export function getAuthApiBaseUrl(): string {
+  let url = process.env.EXPO_PUBLIC_AUTH_API_URL || 'https://api-auth.ayeapps.com/api/v1';
   if (Platform.OS === 'android' && url.includes('localhost')) {
     url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
   }
@@ -14,10 +21,11 @@ export function getApiBaseUrl(): string {
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;
   isRetry?: boolean;
+  isAuthService?: boolean;
 }
 
 async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { requiresAuth = true, isRetry = false, headers = {}, ...rest } = options;
+  const { requiresAuth = true, isRetry = false, isAuthService = false, headers = {}, ...rest } = options;
   const requestHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(headers as Record<string, string>),
@@ -30,7 +38,7 @@ async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Pr
     }
   }
 
-  const baseUrl = getApiBaseUrl();
+  const baseUrl = isAuthService ? getAuthApiBaseUrl() : getApiBaseUrl();
   const url = `${baseUrl}${endpoint}`;
 
   try {
@@ -43,7 +51,8 @@ async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Pr
       const refreshToken = await authStorage.getRefreshToken();
       if (refreshToken) {
         try {
-          const refreshResponse = await fetch(`${baseUrl}/auth/refresh`, {
+          const authBase = getAuthApiBaseUrl();
+          const refreshResponse = await fetch(`${authBase}/auth/refresh`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ refresh_token: refreshToken }),
@@ -108,17 +117,17 @@ async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Pr
 }
 
 export const api = {
-  // Auth
-  register: (data: any) => apiRequest<any>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
-  login: (data: any) => apiRequest<any>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  // Auth (Centralized in aye-auth)
+  register: (data: any) => apiRequest<any>('/auth/register', { method: 'POST', body: JSON.stringify(data), isAuthService: true, requiresAuth: false }),
+  login: (data: any) => apiRequest<any>('/auth/login', { method: 'POST', body: JSON.stringify(data), isAuthService: true, requiresAuth: false }),
   loginWithGoogle: (idToken: string) =>
-    apiRequest<any>('/auth/oauth/google', { method: 'POST', body: JSON.stringify({ id_token: idToken }), requiresAuth: false }),
+    apiRequest<any>('/auth/oauth/google', { method: 'POST', body: JSON.stringify({ id_token: idToken }), isAuthService: true, requiresAuth: false }),
   loginWithApple: (identityToken: string, name?: string, email?: string) =>
-    apiRequest<any>('/auth/oauth/apple', { method: 'POST', body: JSON.stringify({ identity_token: identityToken, name, email }), requiresAuth: false }),
-  logout: () => apiRequest<void>('/auth/logout', { method: 'DELETE' }),
-  deleteAccount: () => apiRequest<void>('/auth/me', { method: 'DELETE' }),
-  getMe: () => apiRequest<any>('/auth/me'),
-  updateProfile: (data: any) => apiRequest<any>('/auth/me', { method: 'PUT', body: JSON.stringify(data) }),
+    apiRequest<any>('/auth/oauth/apple', { method: 'POST', body: JSON.stringify({ identity_token: identityToken, name, email }), isAuthService: true, requiresAuth: false }),
+  logout: () => apiRequest<void>('/auth/logout', { method: 'DELETE', isAuthService: true }),
+  deleteAccount: () => apiRequest<void>('/auth/me', { method: 'DELETE', isAuthService: true }),
+  getMe: () => apiRequest<any>('/auth/me', { isAuthService: true }),
+  updateProfile: (data: any) => apiRequest<any>('/auth/me', { method: 'PUT', body: JSON.stringify(data), isAuthService: true }),
 
   // Tasks
   getTasks: (dateFrom?: string, dateTo?: string) => {
