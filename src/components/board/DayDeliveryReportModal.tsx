@@ -29,6 +29,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useTimerStore } from '../../store/useTimerStore';
 import { useUIStore } from '../../store/useUIStore';
+import { useTranslation } from '../../store/useLanguageStore';
 import { WeekDay, formatTime12h, formatLoggedTime, formatEstimatedDuration } from '../../utils/dateUtils';
 import { calculateDeadlineProgress } from '../../utils/deadlineUtils';
 import { Task } from '../../types';
@@ -48,6 +49,7 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
   const { colors, isDark } = useTheme();
+  const { language, t } = useTranslation();
 
   const allTasks = useTaskStore((state) => state.tasks);
   const updateTask = useTaskStore((state) => state.updateTask);
@@ -100,23 +102,24 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
   };
 
   const handleCopyReport = () => {
+    const isEs = language === 'es';
     const lines = [
-      `📋 INFORME DE ENTREGAS // ${day.name.toUpperCase()} ${day.dayNumber} ${day.monthName.toUpperCase()} (${day.dateString})`,
+      `📋 ${isEs ? 'INFORME DE ENTREGAS' : 'DELIVERIES REPORT'} // ${day.name.toUpperCase()} ${day.dayNumber} ${day.monthName.toUpperCase()} (${day.dateString})`,
       `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-      `• Total Entregas: ${deliveryTasks.length}`,
-      `• Completadas: ${completedDeliveries.length}`,
-      `• Pendientes: ${pendingDeliveries.length}`,
-      `• Tiempo Estimado: ${formatEstimatedDuration(totalEstimatedMins)} | Invertido: ${formatLoggedTime(totalLoggedSecs)}`,
+      `• ${isEs ? 'Total Entregas' : 'Total Deliveries'}: ${deliveryTasks.length}`,
+      `• ${isEs ? 'Completadas' : 'Completed'}: ${completedDeliveries.length}`,
+      `• ${isEs ? 'Pendientes' : 'Pending'}: ${pendingDeliveries.length}`,
+      `• ${isEs ? 'Tiempo Estimado' : 'Estimated Time'}: ${formatEstimatedDuration(totalEstimatedMins)} | ${isEs ? 'Invertido' : 'Logged'}: ${formatLoggedTime(totalLoggedSecs)}`,
       ``,
-      `DETALLE DE ENTREGAS Y HORARIOS:`,
+      `${isEs ? 'DETALLE DE ENTREGAS Y HORARIOS:' : 'DELIVERY TIMETABLE & DETAILS:'}`,
     ];
 
     if (deliveryTasks.length === 0) {
-      lines.push(`(No hay entregas programadas para este día)`);
+      lines.push(isEs ? `(No hay entregas programadas para este día)` : `(No deliveries scheduled for this day)`);
     } else {
       deliveryTasks.forEach((t, i) => {
-        const timeStr = t.dueTime ? `${t.dueTime} (${formatTime12h(t.dueTime)})` : 'TODO EL DÍA';
-        const statusStr = t.status === 'completed' ? '[✓ COMPLETADA]' : '[⏳ PENDIENTE]';
+        const timeStr = t.dueTime ? `${t.dueTime} (${formatTime12h(t.dueTime)})` : (isEs ? 'TODO EL DÍA' : 'ALL DAY');
+        const statusStr = t.status === 'completed' ? (isEs ? '[✓ COMPLETADA]' : '[✓ COMPLETED]') : (isEs ? '[⏳ PENDIENTE]' : '[⏳ PENDING]');
         lines.push(`${i + 1}. [${timeStr}] ${t.title} ${statusStr}`);
         if (t.description) {
           lines.push(`   └ ${t.description}`);
@@ -180,16 +183,16 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
               >
                 <Target size={12} color={colors.accentWarning} strokeWidth={2.5} />
                 <Text style={[styles.cyberBadgeText, { color: colors.accentWarning }]}>
-                  INFORME DE ENTREGAS // DAILY DELIVERIES
+                  {t.deliveriesReport.badge}
                 </Text>
               </View>
             </View>
 
             <Text style={[styles.dayTitle, { color: colors.textPrimary }]}>
-              {day.name.toUpperCase()}, {day.dayNumber} DE {day.monthName.toUpperCase()}
+              {day.name.toUpperCase()}, {day.dayNumber} {language === 'es' ? 'DE' : ''} {day.monthName.toUpperCase()}
             </Text>
             <Text style={[styles.dateSub, { color: colors.textSecondary }]}>
-              FECHA: {day.dateString} // PROGRAMACIÓN DE DEADLINES Y HORARIOS
+              {day.dateString} // {t.deliveriesReport.dateSub}
             </Text>
           </View>
 
@@ -204,7 +207,7 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
             ]}
           >
             <View style={styles.metricBlock}>
-              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>TOTAL ENTREGAS</Text>
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>{t.deliveriesReport.totalDeliveries}</Text>
               <Text style={[styles.metricValue, { color: colors.textPrimary }]}>
                 {deliveryTasks.length}
               </Text>
@@ -213,7 +216,7 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
             <View style={[styles.metricDivider, { backgroundColor: colors.borderMuted }]} />
 
             <View style={styles.metricBlock}>
-              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>COMPLETADAS</Text>
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>{t.deliveriesReport.completed}</Text>
               <Text style={[styles.metricValue, { color: colors.accent }]}>
                 {completedDeliveries.length}
               </Text>
@@ -222,7 +225,7 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
             <View style={[styles.metricDivider, { backgroundColor: colors.borderMuted }]} />
 
             <View style={styles.metricBlock}>
-              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>PENDIENTES</Text>
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>{t.deliveriesReport.pending}</Text>
               <Text
                 style={[
                   styles.metricValue,
@@ -236,7 +239,7 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
             <View style={[styles.metricDivider, { backgroundColor: colors.borderMuted }]} />
 
             <View style={styles.metricBlock}>
-              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>TIEMPO TOTAL</Text>
+              <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>{t.deliveriesReport.totalTime}</Text>
               <Text style={[styles.metricValue, { color: colors.textPrimary }]}>
                 {formatEstimatedDuration(totalEstimatedMins)}
               </Text>
@@ -249,10 +252,10 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
               <View style={[styles.emptyState, { borderColor: colors.borderMuted, backgroundColor: colors.bgSurface }]}>
                 <Calendar size={32} color={colors.textMuted} />
                 <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
-                  SIN ENTREGAS PROGRAMADAS
+                  {t.deliveriesReport.noDeliveriesTitle}
                 </Text>
                 <Text style={[styles.emptySub, { color: colors.textSecondary }]}>
-                  No hay deadlines o entregas con hora fijadas para el {day.name} {day.dayNumber}.
+                  {t.deliveriesReport.noDeliveriesSub}
                 </Text>
 
                 <TouchableOpacity
@@ -271,23 +274,23 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
                 >
                   <Plus size={14} color={colors.textInvert} strokeWidth={3} />
                   <Text style={[styles.emptyAddBtnText, { color: colors.textInvert }]}>
-                    PROGRAMAR NUEVA ENTREGA
+                    {t.deliveriesReport.scheduleNewDelivery}
                   </Text>
                 </TouchableOpacity>
               </View>
             ) : (
               <View style={styles.timelineList}>
-                {deliveryTasks.map((t, idx) => {
-                  const isDone = t.status === 'completed';
-                  const isTracking = !!activeTimers[t.id];
-                  const tagColor = t.colorTag || colors.accent;
-                  const deadlineProg = t.dueDate
-                    ? calculateDeadlineProgress(t.createdAt, t.dueDate, t.dueTime, isDark)
+                {deliveryTasks.map((tItem, idx) => {
+                  const isDone = tItem.status === 'completed';
+                  const isTracking = !!activeTimers[tItem.id];
+                  const tagColor = tItem.colorTag || colors.accent;
+                  const deadlineProg = tItem.dueDate
+                    ? calculateDeadlineProgress(tItem.createdAt, tItem.dueDate, tItem.dueTime, isDark)
                     : null;
 
                   return (
                     <View
-                      key={t.id}
+                      key={tItem.id}
                       style={[
                         styles.deliveryCard,
                         {
@@ -321,10 +324,10 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
                           style={[
                             styles.timeBadge,
                             {
-                              backgroundColor: t.dueTime
+                              backgroundColor: tItem.dueTime
                                 ? 'rgba(255, 171, 0, 0.16)'
                                 : colors.bgBase,
-                              borderColor: t.dueTime
+                              borderColor: tItem.dueTime
                                 ? colors.accentWarning
                                 : colors.borderMuted,
                             },
@@ -332,22 +335,22 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
                         >
                           <Clock
                             size={12}
-                            color={t.dueTime ? colors.accentWarning : colors.textSecondary}
+                            color={tItem.dueTime ? colors.accentWarning : colors.textSecondary}
                             strokeWidth={2.5}
                           />
                           <Text
                             style={[
                               styles.timeBadgeText,
                               {
-                                color: t.dueTime
+                                color: tItem.dueTime
                                   ? colors.accentWarning
                                   : colors.textSecondary,
                               },
                             ]}
                           >
-                            {t.dueTime
-                              ? `@ ${t.dueTime} [${formatTime12h(t.dueTime)}]`
-                              : 'TODO EL DÍA // SIN HORA'}
+                            {tItem.dueTime
+                              ? `@ ${tItem.dueTime} [${formatTime12h(tItem.dueTime)}]`
+                              : t.deliveriesReport.allDayNoTime}
                           </Text>
                         </View>
 
@@ -382,10 +385,10 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
                             ]}
                           >
                             {isDone
-                              ? 'COMPLETADA'
+                              ? t.deliveriesReport.statusCompleted
                               : isTracking
-                              ? 'EN PROGRESO'
-                              : 'PENDIENTE'}
+                              ? t.deliveriesReport.statusInProgress
+                              : t.deliveriesReport.statusPending}
                           </Text>
                         </View>
                       </View>
@@ -393,7 +396,7 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
                       {/* Title & Body */}
                       <View style={styles.deliveryCardBody}>
                         <TouchableOpacity
-                          onPress={() => handleToggleTaskStatus(t)}
+                          onPress={() => handleToggleTaskStatus(tItem)}
                           style={[
                             styles.deliveryCheckbox,
                             {
@@ -409,57 +412,56 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
                         </TouchableOpacity>
 
                         <View style={{ flex: 1 }}>
-                          <TouchableOpacity
-                            onPress={() => setSelectedTaskForDetails(t)}
-                            activeOpacity={0.7}
+                          <Text
+                            style={[
+                              styles.deliveryTitle,
+                              {
+                                color: isDone ? colors.textMuted : colors.textPrimary,
+                                textDecorationLine: isDone ? 'line-through' : 'none',
+                              },
+                            ]}
+                            numberOfLines={2}
                           >
-                            <Text
-                              style={[
-                                styles.deliveryTitle,
-                                {
-                                  color: isDone ? colors.textMuted : colors.textPrimary,
-                                  textDecorationLine: isDone ? 'line-through' : 'none',
-                                },
-                              ]}
-                            >
-                              {t.title.toUpperCase()}
-                            </Text>
-                          </TouchableOpacity>
+                            {tItem.title}
+                          </Text>
 
-                          {t.description ? (
+                          {tItem.description ? (
                             <Text
                               style={[styles.deliveryDesc, { color: colors.textSecondary }]}
                               numberOfLines={2}
                             >
-                              {t.description}
+                              {tItem.description}
                             </Text>
                           ) : null}
                         </View>
                       </View>
 
-                      {/* Deadline Decay Countdown Bar if present */}
+                      {/* Deadline Countdown Progress Bar if active */}
                       {deadlineProg ? (
-                        <View
-                          style={[
-                            styles.deadlineBox,
-                            {
-                              borderColor: deadlineProg.color,
-                              backgroundColor: deadlineProg.backgroundColor,
-                            },
-                          ]}
-                        >
+                        <View style={styles.deadlineBox}>
                           <View style={styles.deadlinFlexRow}>
-                            <Text style={[styles.deadlineLabel, { color: deadlineProg.color }]}>
-                              ● {deadlineProg.label}
+                            <Text
+                              style={[
+                                styles.deadlineLabel,
+                                { color: deadlineProg.color },
+                              ]}
+                            >
+                              {deadlineProg.label.toUpperCase()}
                             </Text>
-                            <Text style={[styles.deadlinePercent, { color: deadlineProg.color }]}>
-                              {Math.round(deadlineProg.percentage)}% CONSUMIDO
+                            <Text
+                              style={[
+                                styles.deadlinePercent,
+                                { color: deadlineProg.color },
+                              ]}
+                            >
+                              {Math.round(deadlineProg.percentage)}% {t.deliveriesReport.consumed}
                             </Text>
                           </View>
+
                           <View
                             style={[
                               styles.deadlineTrack,
-                              { backgroundColor: isDark ? '#1a1a1a' : '#eaeaea' },
+                              { backgroundColor: colors.borderMuted },
                             ]}
                           >
                             <View
@@ -489,11 +491,11 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
                           >
                             <Clock size={11} color={colors.textSecondary} />
                             <Text style={[styles.footerChipText, { color: colors.textSecondary }]}>
-                              EST: {formatEstimatedDuration(t.estimatedDurationMinutes)}
+                              {t.deliveriesReport.estLabel} {formatEstimatedDuration(tItem.estimatedDurationMinutes)}
                             </Text>
                           </View>
 
-                          {t.actualDurationSeconds > 0 ? (
+                          {tItem.actualDurationSeconds > 0 ? (
                             <View
                               style={[
                                 styles.footerChip,
@@ -515,7 +517,7 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
                                   { color: isDone ? colors.textSecondary : colors.accent },
                                 ]}
                               >
-                                LOG: {formatLoggedTime(t.actualDurationSeconds)}
+                                {t.deliveriesReport.logLabel} {formatLoggedTime(tItem.actualDurationSeconds)}
                               </Text>
                             </View>
                           ) : null}
@@ -530,12 +532,12 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
                               backgroundColor: colors.bgBase,
                             },
                           ]}
-                          onPress={() => setSelectedTaskForDetails(t)}
+                          onPress={() => setSelectedTaskForDetails(tItem)}
                           activeOpacity={0.7}
                         >
                           <FileText size={12} color={colors.textSecondary} />
                           <Text style={[styles.inspectBtnText, { color: colors.textSecondary }]}>
-                            DETALLES
+                            {t.deliveriesReport.detailsBtn}
                           </Text>
                         </TouchableOpacity>
                       </View>
@@ -563,14 +565,14 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
                 <>
                   <Check size={14} color={colors.accent} strokeWidth={3} />
                   <Text style={[styles.copyReportText, { color: colors.accent }]}>
-                    ¡INFORME COPIADO!
+                    {t.deliveriesReport.reportCopied}
                   </Text>
                 </>
               ) : (
                 <>
                   <Copy size={14} color={colors.textPrimary} />
                   <Text style={[styles.copyReportText, { color: colors.textPrimary }]}>
-                    COPIAR INFORME
+                    {t.deliveriesReport.copyReport}
                   </Text>
                 </>
               )}
@@ -592,7 +594,7 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
             >
               <Plus size={14} color={colors.textInvert} strokeWidth={3} />
               <Text style={[styles.newDeliveryText, { color: colors.textInvert }]}>
-                AGREGAR ENTREGA
+                {t.deliveriesReport.addDelivery}
               </Text>
             </TouchableOpacity>
           </View>

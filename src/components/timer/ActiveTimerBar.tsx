@@ -4,6 +4,7 @@ import { Square, CheckCircle, Flame, Minimize2 } from 'lucide-react-native';
 import { THEME } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useTimerStore } from '../../store/useTimerStore';
+import { useTranslation } from '../../store/useLanguageStore';
 import { formatDigitalTimer } from '../../utils/dateUtils';
 
 export const ActiveTimerBar: React.FC = () => {
@@ -17,6 +18,7 @@ export const ActiveTimerBar: React.FC = () => {
   const completeTaskAndStop = useTimerStore((state) => state.completeTaskAndStop);
 
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const slideInAnim = useRef(new Animated.Value(60)).current;
@@ -98,7 +100,7 @@ export const ActiveTimerBar: React.FC = () => {
           ]}
         >
           <Text style={[styles.techBadgeText, { color: colors.accentDanger }]}>
-            STATUS: DEEP FOCUS // ACTIVE SESSION ({formatDigitalTimer(activeFocusTimer.sessionElapsedSeconds)})
+            {t.timerBar.statusBadge} ({formatDigitalTimer(activeFocusTimer.sessionElapsedSeconds)})
           </Text>
         </View>
 
@@ -117,7 +119,7 @@ export const ActiveTimerBar: React.FC = () => {
             <Flame size={18} color={colors.accentDanger} />
           </Animated.View>
           <View style={styles.taskInfo}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>FOCUSING ON TASK:</Text>
+            <Text style={[styles.label, { color: colors.textSecondary }]}>{t.timerBar.focusingOn}</Text>
             <Text
               style={[styles.taskTitle, { color: colors.textPrimary }]}
               numberOfLines={1}
@@ -159,7 +161,7 @@ export const ActiveTimerBar: React.FC = () => {
             <Minimize2 size={13} color={colors.textSecondary} />
             {!isMobile ? (
               <Text style={[styles.utilityBtnText, { color: colors.textSecondary }]}>
-                MINIMIZE
+                {t.timerBar.minimize}
               </Text>
             ) : null}
           </TouchableOpacity>
@@ -177,7 +179,7 @@ export const ActiveTimerBar: React.FC = () => {
             activeOpacity={0.7}
           >
             <Square size={13} color={colors.textPrimary} fill={colors.textPrimary} />
-            <Text style={[styles.stopBtnText, { color: colors.textPrimary }]}>PAUSE</Text>
+            <Text style={[styles.stopBtnText, { color: colors.textPrimary }]}>{t.timerBar.pause}</Text>
           </TouchableOpacity>
 
           {/* Complete Task and Close */}
@@ -194,7 +196,7 @@ export const ActiveTimerBar: React.FC = () => {
           >
             <CheckCircle size={16} color={colors.textInvert} strokeWidth={2.5} />
             <Text style={[styles.completeBtnText, { color: colors.textInvert }]}>
-              {isMobile ? 'COMPLETE' : 'COMPLETE TASK ➔'}
+              {isMobile ? t.timerBar.complete : t.timerBar.completeTaskBtn}
             </Text>
           </TouchableOpacity>
         </View>

@@ -25,6 +25,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useTimerStore } from '../../store/useTimerStore';
 import { useUIStore } from '../../store/useUIStore';
+import { useTranslation } from '../../store/useLanguageStore';
 import { useCanvasContext } from '../../context/CanvasContext';
 import { Task } from '../../types';
 import { Rect } from '../../utils/geometryUtils';
@@ -48,6 +49,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
 
   const cardRef = useRef<View>(null);
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   const canvasCtx = useCanvasContext();
 
   const toggleTaskStatus = useTaskStore((state) => state.toggleTaskStatus);
@@ -555,7 +557,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                   <View style={styles.deadlineLeftGroup}>
                     <Target size={10} color={deadlineInfo.color} strokeWidth={3} />
                     <Text style={[styles.deadlineTargetText, { color: deadlineInfo.color }]}>
-                      DUE {task.dueDate?.slice(5)}{task.dueTime ? ` @ ${task.dueTime}` : ''}
+                      {t.taskCard.due} {task.dueDate?.slice(5)}{task.dueTime ? ` @ ${task.dueTime}` : ''}
                     </Text>
                   </View>
 
@@ -593,7 +595,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     <Flame size={11} color={colors.accentDanger} />
                   </Animated.View>
                   <Text style={[styles.techChipLoggedText, { color: colors.accentDanger }]}>
-                    FOCUS: {formatDigitalTimer(currentTotalSeconds)}
+                    {t.taskCard.focus}: {formatDigitalTimer(currentTotalSeconds)}
                   </Text>
                 </View>
               ) : isBgTrackRunning ? (
@@ -610,7 +612,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     <Activity size={11} color={colors.accentWarning} />
                   </Animated.View>
                   <Text style={[styles.techChipLoggedText, { color: colors.accentWarning }]}>
-                    TRACKING: {formatDigitalTimer(currentTotalSeconds)}
+                    {t.taskCard.tracking}{formatDigitalTimer(currentTotalSeconds)}
                   </Text>
                 </View>
               ) : null}
@@ -642,7 +644,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 ]}
               >
                 <Text style={[styles.techChipText, { color: colors.textSecondary }]}>
-                  EST: {formatEstimatedDuration(task.estimatedDurationMinutes)}
+                  {t.taskCard.est}{formatEstimatedDuration(task.estimatedDurationMinutes)}
                 </Text>
               </View>
 
@@ -663,7 +665,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 >
                   <FileText size={10} color={colors.accent} />
                   <Text style={[styles.techChipLoggedText, { color: colors.accent }]}>
-                    NOTES
+                    {t.taskCard.notes}
                   </Text>
                 </TouchableOpacity>
               ) : null}
@@ -684,7 +686,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                       { color: isCompleted ? colors.textSecondary : colors.accent },
                     ]}
                   >
-                    {isCompleted ? 'TOOK: ' : 'TOTAL: '}
+                    {isCompleted ? t.taskCard.took : t.taskCard.total}
                     {formatLoggedTime(task.actualDurationSeconds)}
                   </Text>
                 </View>
@@ -723,14 +725,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                         <Square size={9} color={colors.textInvert} fill={colors.textInvert} />
                       </Animated.View>
                       <Text style={[styles.splitBtnText, { color: colors.textInvert }]}>
-                        PAUSE
+                        {t.taskCard.pause}
                       </Text>
                     </>
                   ) : (
                     <>
                       <Flame size={11} color={colors.accentDanger} />
                       <Text style={[styles.splitBtnText, { color: colors.accentDanger }]}>
-                        FOCUS
+                        {t.taskCard.focus}
                       </Text>
                     </>
                   )}
@@ -769,14 +771,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                         <Square size={9} color={colors.accentWarning} fill={colors.accentWarning} />
                       </Animated.View>
                       <Text style={[styles.splitBtnText, { color: colors.accentWarning }]}>
-                        PAUSE
+                        {t.taskCard.pause}
                       </Text>
                     </>
                   ) : (
                     <>
                       <Activity size={10} color={colors.accentWarning} />
                       <Text style={[styles.splitBtnText, { color: colors.accentWarning }]}>
-                        IN PROGRESS
+                        {t.taskCard.inProgress}
                       </Text>
                     </>
                   )}
@@ -795,7 +797,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             >
               <Check size={11} color={colors.accent} strokeWidth={3} />
               <Text style={[styles.completedFooterText, { color: colors.accent }]}>
-                COMPLETED
+                {t.taskCard.completed}
               </Text>
             </View>
           )}

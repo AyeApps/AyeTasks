@@ -15,6 +15,7 @@ import { THEME } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useUIStore } from '../../store/useUIStore';
+import { useTranslation } from '../../store/useLanguageStore';
 import {
   formatDateISO,
   getMondayOfWeek,
@@ -25,12 +26,6 @@ import {
 } from '../../utils/dateUtils';
 
 type DurationUnit = 'minutes' | 'hours' | 'days';
-
-const DURATION_UNITS: { id: DurationUnit; label: string; short: string }[] = [
-  { id: 'minutes', label: 'MINUTES', short: 'MIN' },
-  { id: 'hours', label: 'HOURS', short: 'HRS' },
-  { id: 'days', label: 'DAYS', short: 'DAYS' },
-];
 
 const QUICK_DURATION_PRESETS = [
   { label: '30M', val: '30', unit: 'minutes' as DurationUnit },
@@ -67,6 +62,13 @@ export const QuickAddTaskModal: React.FC = () => {
   const closeQuickAdd = useUIStore((state) => state.closeQuickAdd);
 
   const { colors } = useTheme();
+  const { t } = useTranslation();
+
+  const DURATION_UNITS: { id: DurationUnit; label: string; short: string }[] = [
+    { id: 'minutes', label: t.quickAdd.minutes, short: t.quickAdd.minutes },
+    { id: 'hours', label: t.quickAdd.hours, short: t.quickAdd.hours },
+    { id: 'days', label: t.quickAdd.days, short: t.quickAdd.days },
+  ];
 
   const createTask = useTaskStore((state) => state.createTask);
   const tasks = useTaskStore((state) => state.tasks);
@@ -95,11 +97,11 @@ export const QuickAddTaskModal: React.FC = () => {
     sunday.setDate(monday.getDate() + 6);
 
     return [
-      { id: 'same', label: 'SAME DAY', date: targetDate },
-      { id: 'tomorrow', label: 'TOMORROW', date: formatDateISO(tomorrow) },
-      { id: 'sunday', label: 'END OF WK', date: formatDateISO(sunday) },
+      { id: 'same', label: t.quickAdd.sameDay, date: targetDate },
+      { id: 'tomorrow', label: t.quickAdd.tomorrow, date: formatDateISO(tomorrow) },
+      { id: 'sunday', label: t.quickAdd.endOfWeek, date: formatDateISO(sunday) },
     ];
-  }, [targetDate]);
+  }, [targetDate, t.quickAdd.sameDay, t.quickAdd.tomorrow, t.quickAdd.endOfWeek]);
 
   useEffect(() => {
     if (isOpen) {
@@ -218,7 +220,7 @@ export const QuickAddTaskModal: React.FC = () => {
             ]}
           >
             <Text style={[styles.techBadgeText, { color: selectedColor }]}>
-              STATUS: DRAFT // NEW NODE
+              {t.quickAdd.statusDraft}
             </Text>
           </View>
 
@@ -241,10 +243,10 @@ export const QuickAddTaskModal: React.FC = () => {
             {/* Header */}
             <View style={styles.titleSection}>
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                WORKFLOW SPECIFICATION
+                {t.quickAdd.modalSubtitle}
               </Text>
               <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>
-                CREATE TASK
+                {t.quickAdd.modalTitle}
               </Text>
             </View>
 
@@ -261,14 +263,14 @@ export const QuickAddTaskModal: React.FC = () => {
               >
                 <LinkIcon size={14} color={colors.accent} />
                 <Text style={[styles.linkedText, { color: colors.accent }]} numberOfLines={1}>
-                  CONTINUATION OF: <Text style={{ fontWeight: '900' }}>{parentTask.title.toUpperCase()}</Text>
+                  {t.quickAdd.continuationOf} <Text style={{ fontWeight: '900' }}>{parentTask.title.toUpperCase()}</Text>
                 </Text>
               </View>
             ) : null}
 
             {/* Form Title */}
             <View style={styles.formGroup}>
-              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>TASK TITLE:</Text>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t.quickAdd.titleLabel}</Text>
               <TextInput
                 style={[
                   styles.geometricInput,
@@ -278,7 +280,7 @@ export const QuickAddTaskModal: React.FC = () => {
                     color: colors.textPrimary,
                   },
                 ]}
-                placeholder="E.G. DEVELOP AUTH MODULE ARCHITECTURE"
+                placeholder={t.quickAdd.titlePlaceholder}
                 placeholderTextColor={colors.textMuted}
                 value={title}
                 onChangeText={setTitle}
@@ -288,7 +290,7 @@ export const QuickAddTaskModal: React.FC = () => {
 
             {/* Form Description */}
             <View style={styles.formGroup}>
-              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>DESCRIPTION (OPTIONAL):</Text>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t.quickAdd.descLabel}</Text>
               <TextInput
                 style={[
                   styles.geometricInput,
@@ -299,7 +301,7 @@ export const QuickAddTaskModal: React.FC = () => {
                     color: colors.textPrimary,
                   },
                 ]}
-                placeholder="ADD BRIEF OVERVIEW..."
+                placeholder={t.quickAdd.descPlaceholder}
                 placeholderTextColor={colors.textMuted}
                 value={description}
                 onChangeText={setDescription}
@@ -313,7 +315,7 @@ export const QuickAddTaskModal: React.FC = () => {
               <View style={styles.labelWithIcon}>
                 <FileText size={13} color={colors.accent} />
                 <Text style={[styles.inputLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
-                  INTERNAL NOTES & SCRATCHPAD (OPTIONAL):
+                  {t.quickAdd.notesLabel}
                 </Text>
               </View>
               <TextInput
@@ -326,7 +328,7 @@ export const QuickAddTaskModal: React.FC = () => {
                     color: colors.textPrimary,
                   },
                 ]}
-                placeholder="CHECKLISTS, CODE SNIPPETS, KEY REQUIREMENTS..."
+                placeholder={t.quickAdd.notesPlaceholder}
                 placeholderTextColor={colors.textMuted}
                 value={notes}
                 onChangeText={setNotes}
@@ -341,7 +343,7 @@ export const QuickAddTaskModal: React.FC = () => {
               <View style={styles.labelWithIcon}>
                 <Calendar size={13} color={colors.accent} />
                 <Text style={[styles.inputLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
-                  DELIVERY DEADLINE & DUE TIME (OPTIONAL):
+                  {t.quickAdd.deadlineSectionLabel}
                 </Text>
               </View>
 
@@ -350,7 +352,7 @@ export const QuickAddTaskModal: React.FC = () => {
                 {/* Date Input Column */}
                 <View style={{ flex: 1.2 }}>
                   <Text style={[styles.inputSubLabel, { color: colors.textSecondary }]}>
-                    DUE DATE (YYYY-MM-DD):
+                    {t.quickAdd.dueDateLabel}
                   </Text>
                   <TextInput
                     style={[
@@ -398,7 +400,7 @@ export const QuickAddTaskModal: React.FC = () => {
                           },
                         ]}
                       >
-                        NONE
+                        {t.quickAdd.noneDate}
                       </Text>
                     </TouchableOpacity>
 
@@ -442,7 +444,7 @@ export const QuickAddTaskModal: React.FC = () => {
                 <View style={{ flex: 1, marginLeft: isMobile ? 0 : 12, marginTop: isMobile ? 8 : 0 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                     <Text style={[styles.inputSubLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
-                      DUE TIME (HH:MM):
+                      {t.quickAdd.dueTimeLabel}
                     </Text>
                     {isValidTimeHHMM(dueTime) ? (
                       <Text style={{ fontSize: 10, fontFamily: THEME.fonts.mono, color: colors.accent, fontWeight: '800' }}>
@@ -450,7 +452,7 @@ export const QuickAddTaskModal: React.FC = () => {
                       </Text>
                     ) : dueTime ? (
                       <Text style={{ fontSize: 10, fontFamily: THEME.fonts.mono, color: colors.accentWarning, fontWeight: '800' }}>
-                        FORMAT: HH:MM
+                        {t.quickAdd.timeFormatHelper}
                       </Text>
                     ) : null}
                   </View>
@@ -545,7 +547,7 @@ export const QuickAddTaskModal: React.FC = () => {
                 <View style={styles.labelWithIcon}>
                   <Clock size={13} color={colors.accent} />
                   <Text style={[styles.inputLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
-                    ESTIMATED DURATION:
+                    {t.quickAdd.estDurationLabel}
                   </Text>
                 </View>
                 <Text style={[styles.durationPreviewText, { color: colors.accent }]}>
@@ -652,7 +654,7 @@ export const QuickAddTaskModal: React.FC = () => {
               <View style={styles.labelWithIcon}>
                 <Palette size={13} color={selectedColor} />
                 <Text style={[styles.inputLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
-                  COLOR CODE TAG & PALETTE:
+                  {t.quickAdd.colorTagLabel}
                 </Text>
                 <View style={[styles.colorPreviewDot, { backgroundColor: selectedColor }]} />
               </View>
@@ -682,7 +684,7 @@ export const QuickAddTaskModal: React.FC = () => {
 
               {/* Custom Hex input + Native Web Color Picker */}
               <View style={styles.customHexRow}>
-                <Text style={[styles.hexLabel, { color: colors.textSecondary }]}>HEX CODE:</Text>
+                <Text style={[styles.hexLabel, { color: colors.textSecondary }]}>{t.quickAdd.customHexLabel}</Text>
                 <TextInput
                   style={[
                     styles.hexInput,
@@ -734,7 +736,7 @@ export const QuickAddTaskModal: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <Text style={[styles.cancelText, { color: colors.textSecondary }]}>
-                  CANCEL
+                  {t.quickAdd.cancelBtn}
                 </Text>
               </TouchableOpacity>
 
@@ -752,7 +754,7 @@ export const QuickAddTaskModal: React.FC = () => {
                 activeOpacity={0.8}
               >
                 <Text style={[styles.submitText, { color: colors.textInvert }]}>
-                  {isSubmitting ? 'CREATING NODE...' : 'CREATE NODE ➔'}
+                  {isSubmitting ? t.quickAdd.creatingBtn : t.quickAdd.createBtn}
                 </Text>
               </TouchableOpacity>
             </View>

@@ -29,6 +29,7 @@ import { THEME } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useTimerStore } from '../../store/useTimerStore';
+import { useTranslation } from '../../store/useLanguageStore';
 import { Task } from '../../types';
 import {
   formatDigitalTimer,
@@ -72,6 +73,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const updateTask = useTaskStore((state) => state.updateTask);
   const deleteTask = useTaskStore((state) => state.deleteTask);
@@ -104,11 +106,11 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
     sunday.setDate(monday.getDate() + 6);
 
     return [
-      { id: 'same', label: 'SAME DAY', date: task.date },
-      { id: 'tomorrow', label: 'TOMORROW', date: formatDateISO(tomorrow) },
-      { id: 'sunday', label: 'END OF WK', date: formatDateISO(sunday) },
+      { id: 'same', label: t.quickAdd.sameDay, date: task.date },
+      { id: 'tomorrow', label: t.quickAdd.tomorrow, date: formatDateISO(tomorrow) },
+      { id: 'sunday', label: t.quickAdd.endOfWeek, date: formatDateISO(sunday) },
     ];
-  }, [task?.date]);
+  }, [task?.date, t.quickAdd.sameDay, t.quickAdd.tomorrow, t.quickAdd.endOfWeek]);
 
   useEffect(() => {
     if (task) {
@@ -244,7 +246,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
             ]}
           >
             <Text style={[styles.techBadgeText, { color: colorTag }]}>
-              NODE // {isEditing ? 'EDITING SPECIFICATION' : task.status.toUpperCase()} // ID: {task.id.slice(-6)}
+              {t.taskDetails.statusPrefix} {isEditing ? t.taskDetails.editingSpec : task.status.toUpperCase()} // ID: {task.id.slice(-6)}
             </Text>
           </View>
 
@@ -263,7 +265,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 activeOpacity={0.7}
               >
                 <Pencil size={13} color={colors.accent} strokeWidth={2.5} />
-                <Text style={[styles.editModeToggleText, { color: colors.accent }]}>EDIT</Text>
+                <Text style={[styles.editModeToggleText, { color: colors.accent }]}>{t.taskDetails.editBtn}</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
@@ -278,7 +280,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 activeOpacity={0.7}
               >
                 <Eye size={13} color={colors.textSecondary} strokeWidth={2.5} />
-                <Text style={[styles.editModeToggleText, { color: colors.textSecondary }]}>VIEW</Text>
+                <Text style={[styles.editModeToggleText, { color: colors.textSecondary }]}>{t.taskDetails.viewBtn}</Text>
               </TouchableOpacity>
             )}
 
@@ -336,7 +338,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
               <View style={[styles.metricsBar, { borderColor: colors.borderMuted, backgroundColor: colors.bgSurface }]}>
                 <View style={styles.metricItem}>
                   <Clock size={13} color={colors.textSecondary} />
-                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>ESTIMATED:</Text>
+                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>{t.taskDetails.estimatedLabel}</Text>
                   <Text style={[styles.metricVal, { color: colors.textPrimary }]}>
                     {formatEstimatedDuration(task.estimatedDurationMinutes)}
                   </Text>
@@ -346,7 +348,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
 
                 <View style={styles.metricItem}>
                   <Activity size={13} color={colors.accentWarning} />
-                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>LOGGED:</Text>
+                  <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>{t.taskDetails.loggedLabel}</Text>
                   <Text style={[styles.metricVal, { color: colors.accentWarning }]}>
                     {formatLoggedTime(task.actualDurationSeconds)}
                   </Text>
@@ -357,7 +359,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                     <View style={[styles.metricDivider, { backgroundColor: colors.borderMuted }]} />
                     <View style={styles.metricItem}>
                       <Calendar size={13} color={colors.accent} />
-                      <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>DUE:</Text>
+                      <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>{t.taskDetails.dueLabel}</Text>
                       <Text style={[styles.metricVal, { color: colors.accent }]}>
                         {task.dueDate} {task.dueTime || ''}
                       </Text>
@@ -386,7 +388,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                       { color: isFocusModeRunning ? colors.textInvert : colors.accentDanger },
                     ]}
                   >
-                    {isFocusModeRunning ? 'PAUSE FOCUS' : 'START FOCUS'}
+                    {isFocusModeRunning ? t.taskDetails.pauseFocus : t.taskDetails.startFocus}
                   </Text>
                 </TouchableOpacity>
 
@@ -408,7 +410,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                       { color: isBgTrackRunning ? colors.textInvert : colors.accentWarning },
                     ]}
                   >
-                    {isBgTrackRunning ? 'PAUSE TRACKING' : 'IN PROGRESS'}
+                    {isBgTrackRunning ? t.taskDetails.pauseTracking : t.taskDetails.startTracking}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -417,7 +419,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
               {task.description ? (
                 <View style={styles.viewSection}>
                   <Text style={[styles.viewSectionLabel, { color: colors.textSecondary }]}>
-                    DESCRIPTION / SUBTITLE:
+                    {t.taskDetails.descLabel}
                   </Text>
                   <View style={[styles.viewBox, { backgroundColor: colors.bgSurface, borderColor: colors.borderMuted }]}>
                     <Text style={[styles.viewBoxText, { color: colors.textPrimary }]}>
@@ -432,7 +434,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 <View style={styles.labelWithIcon}>
                   <FileText size={14} color={colors.accent} />
                   <Text style={[styles.viewSectionLabel, { color: colors.textPrimary }]}>
-                    INTERNAL NOTES & SCRATCHPAD:
+                    {t.taskDetails.notesLabel}
                   </Text>
                 </View>
                 <View
@@ -451,7 +453,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                     </Text>
                   ) : (
                     <Text style={[styles.viewEmptyNotes, { color: colors.textMuted }]}>
-                      No internal notes recorded yet. Tap "EDIT" to add checklist or markdown notes.
+                      {t.taskDetails.noNotesText}
                     </Text>
                   )}
                 </View>
@@ -472,7 +474,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 >
                   <Pencil size={14} color={colors.textInvert} strokeWidth={2.5} />
                   <Text style={[styles.viewEditActionBtnText, { color: colors.textInvert }]}>
-                    EDIT TASK SPECIFICATION
+                    {t.taskDetails.editSpecBtn}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -485,7 +487,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
               {/* Header / Title Input */}
               <View style={styles.headerSection}>
                 <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-                  EDIT TASK TITLE:
+                  {t.taskDetails.editTitleLabel}
                 </Text>
                 <TextInput
                   style={[
@@ -498,7 +500,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                   ]}
                   value={title}
                   onChangeText={setTitle}
-                  placeholder="TASK TITLE"
+                  placeholder={t.taskDetails.titlePlaceholder}
                   placeholderTextColor={colors.textMuted}
                 />
               </View>
@@ -508,7 +510,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 <View style={styles.labelWithIcon}>
                   <Palette size={14} color={colorTag} />
                   <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>
-                    CUSTOM COLOR PALETTE:
+                    {t.taskDetails.colorPaletteLabel}
                   </Text>
                   <View style={[styles.colorPreviewDot, { backgroundColor: colorTag }]} />
                 </View>
@@ -538,7 +540,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
 
                 {/* Custom HEX Code Input + Native Color Picker Trigger */}
                 <View style={styles.customHexRow}>
-                  <Text style={[styles.hexLabel, { color: colors.textSecondary }]}>CUSTOM HEX:</Text>
+                  <Text style={[styles.hexLabel, { color: colors.textSecondary }]}>{t.taskDetails.customHexLabel}</Text>
                   <TextInput
                     style={[
                       styles.hexInput,
@@ -582,7 +584,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 <View style={styles.labelWithIcon}>
                   <Calendar size={14} color={colors.accent} />
                   <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>
-                    DEADLINE & DUE TIME:
+                    {t.taskDetails.deadlinesLabel}
                   </Text>
                 </View>
 
@@ -590,7 +592,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                   {/* Due Date */}
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.inputSubLabel, { color: colors.textSecondary }]}>
-                      DUE DATE (YYYY-MM-DD):
+                      {t.taskDetails.dueDateLabel}
                     </Text>
                     <TextInput
                       style={[
@@ -639,7 +641,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                             },
                           ]}
                         >
-                          NONE
+                          {t.quickAdd.noneDate}
                         </Text>
                       </TouchableOpacity>
 
@@ -683,7 +685,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                   <View style={{ flex: 1.1, marginLeft: isMobile ? 0 : 12, marginTop: isMobile ? 8 : 0 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                       <Text style={[styles.inputSubLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
-                        DUE TIME (HH:MM):
+                        {t.taskDetails.dueTimeLabel}
                       </Text>
                       {isValidTimeHHMM(dueTime) ? (
                         <Text style={{ fontSize: 10, fontFamily: THEME.fonts.mono, color: colors.accent, fontWeight: '800' }}>
@@ -691,7 +693,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                         </Text>
                       ) : dueTime ? (
                         <Text style={{ fontSize: 10, fontFamily: THEME.fonts.mono, color: colors.accentWarning, fontWeight: '800' }}>
-                          FORMAT: HH:MM
+                          {t.quickAdd.timeFormatHelper}
                         </Text>
                       ) : null}
                     </View>
@@ -783,7 +785,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
               {/* Description Field (Brief Subtitle) */}
               <View style={styles.section}>
                 <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
-                  DESCRIPTION / SUBTITLE:
+                  {t.taskDetails.descEditLabel}
                 </Text>
                 <TextInput
                   style={[
@@ -796,7 +798,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                   ]}
                   value={description}
                   onChangeText={setDescription}
-                  placeholder="BRIEF HIGH-LEVEL SUMMARY..."
+                  placeholder={t.taskDetails.descEditPlaceholder}
                   placeholderTextColor={colors.textMuted}
                 />
               </View>
@@ -806,7 +808,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 <View style={styles.labelWithIcon}>
                   <FileText size={14} color={colors.accent} />
                   <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>
-                    INTERNAL NOTES & SCRATCHPAD (MARKDOWN SUPPORT):
+                    {t.taskDetails.notesEditLabel}
                   </Text>
                 </View>
                 <TextInput
@@ -820,7 +822,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                   ]}
                   value={notes}
                   onChangeText={setNotes}
-                  placeholder="WRITE DETAILED IMPLEMENTATION NOTES, ACCEPTANCE CRITERIA, CHECKLISTS, CODE SNIPPETS..."
+                  placeholder={t.taskDetails.notesEditPlaceholder}
                   placeholderTextColor={colors.textMuted}
                   multiline
                   numberOfLines={7}
@@ -842,7 +844,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                   activeOpacity={0.7}
                 >
                   <Trash2 size={14} color={colors.accentDanger} />
-                  <Text style={[styles.deleteBtnText, { color: colors.accentDanger }]}>DELETE</Text>
+                  <Text style={[styles.deleteBtnText, { color: colors.accentDanger }]}>{t.taskDetails.deleteBtn}</Text>
                 </TouchableOpacity>
 
                 <View style={styles.rightActions}>
@@ -857,7 +859,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                     onPress={handleCancelEdit}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.cancelText, { color: colors.textSecondary }]}>CANCEL</Text>
+                    <Text style={[styles.cancelText, { color: colors.textSecondary }]}>{t.taskDetails.cancelBtn}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -874,7 +876,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                     activeOpacity={0.8}
                   >
                     <Text style={[styles.saveText, { color: colors.textInvert }]}>
-                      {isSaving ? 'SAVING...' : 'SAVE CHANGES ➔'}
+                      {isSaving ? t.taskDetails.savingBtn : t.taskDetails.saveChangesBtn}
                     </Text>
                   </TouchableOpacity>
                 </View>

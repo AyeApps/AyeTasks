@@ -5,6 +5,7 @@ import { THEME } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useUIStore } from '../../store/useUIStore';
+import { useTranslation } from '../../store/useLanguageStore';
 
 export const ConnectingBanner: React.FC = () => {
   const isConnectingMode = useUIStore((state) => state.isConnectingMode);
@@ -13,6 +14,7 @@ export const ConnectingBanner: React.FC = () => {
   const tasks = useTaskStore((state) => state.tasks);
 
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   if (!isConnectingMode || !connectingSourceTaskId) return null;
 
@@ -45,7 +47,7 @@ export const ConnectingBanner: React.FC = () => {
 
           <View style={styles.textGroup}>
             <Text style={[styles.statusLabel, { color: colors.accent }]}>
-              LINKING FROM NODE:
+              {t.connectingBanner.linkingFrom}
             </Text>
             <Text
               style={[styles.taskTitle, { color: colors.textPrimary }]}
@@ -59,7 +61,7 @@ export const ConnectingBanner: React.FC = () => {
         <View style={styles.centerPrompt}>
           <ArrowRight size={14} color={colors.accent} strokeWidth={2.5} />
           <Text style={[styles.promptText, { color: colors.textPrimary }]}>
-            CLICK TARGET TASK TO ESTABLISH CONNECTION
+            {t.connectingBanner.prompt}
           </Text>
         </View>
 
@@ -76,7 +78,7 @@ export const ConnectingBanner: React.FC = () => {
         >
           <X size={12} color={colors.textPrimary} strokeWidth={2.5} />
           <Text style={[styles.cancelBtnText, { color: colors.textPrimary }]}>
-            CANCEL
+            {t.connectingBanner.cancel}
           </Text>
         </TouchableOpacity>
       </View>

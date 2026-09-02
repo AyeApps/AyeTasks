@@ -21,6 +21,7 @@ import {
 import { THEME } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useUIStore } from '../../store/useUIStore';
+import { useTranslation } from '../../store/useLanguageStore';
 import { formatDigitalTimer, formatTime12h, isValidTimeHHMM } from '../../utils/dateUtils';
 import { WorkHoursSettingsModal } from './WorkHoursSettingsModal';
 
@@ -29,6 +30,7 @@ export const WorkShiftWidget: React.FC = () => {
   const isMobile = width < 700;
   const isTablet = width < 1024;
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
 
   const workStartTime = useUIStore((state) => state.workStartTime) || '09:00';
   const workEndTime = useUIStore((state) => state.workEndTime) || '18:00';
@@ -123,9 +125,9 @@ export const WorkShiftWidget: React.FC = () => {
     // 1. Before shift start
     shiftState = 'before';
     const diffSecs = Math.max(0, Math.floor((startMs - nowMs) / 1000));
-    countdownLabel = `ENTRADA EN ${formatDigitalTimer(diffSecs)}`;
+    countdownLabel = `${t.workShift.entryIn} ${formatDigitalTimer(diffSecs)}`;
     progressPercent = 0;
-    statusBadgeText = 'ANTES DE ENTRAR';
+    statusBadgeText = t.workShift.beforeShift;
     statusColor = colors.textSecondary;
   } else if (nowMs >= startMs && nowMs <= endMs) {
     // 2. Active Shift
@@ -134,16 +136,16 @@ export const WorkShiftWidget: React.FC = () => {
     const elapsedMs = nowMs - startMs;
     const remainingSecs = Math.max(0, Math.floor((endMs - nowMs) / 1000));
     progressPercent = Math.min(100, Math.max(0, (elapsedMs / totalShiftMs) * 100));
-    countdownLabel = `${formatDigitalTimer(remainingSecs)} PARA SALIR`;
-    statusBadgeText = 'JORNADA ACTIVA';
+    countdownLabel = `${formatDigitalTimer(remainingSecs)} ${t.workShift.untilShiftEnd}`;
+    statusBadgeText = t.workShift.activeShift;
     statusColor = activeColor;
   } else {
     // 3. Completed Shift / Overtime
     shiftState = 'completed';
     const overtimeSecs = Math.max(0, Math.floor((nowMs - endMs) / 1000));
-    countdownLabel = `JORNADA COMPLETADA // +${formatDigitalTimer(overtimeSecs)}`;
+    countdownLabel = `${t.workShift.shiftCompleted} // +${formatDigitalTimer(overtimeSecs)}`;
     progressPercent = 100;
-    statusBadgeText = 'FINALIZADA';
+    statusBadgeText = t.workShift.finished;
     statusColor = completedColor;
   }
 

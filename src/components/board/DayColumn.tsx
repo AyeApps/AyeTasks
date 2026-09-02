@@ -13,6 +13,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useTimerStore } from '../../store/useTimerStore';
 import { useUIStore } from '../../store/useUIStore';
+import { useTranslation } from '../../store/useLanguageStore';
 import { WeekDay } from '../../utils/dateUtils';
 import { TaskCard } from './TaskCard';
 import { DayDeliveryReportModal } from './DayDeliveryReportModal';
@@ -35,6 +36,7 @@ export const DayColumn: React.FC<DayColumnProps> = ({
   const { width } = useWindowDimensions();
   const isMobile = width < 700;
 
+  const { t } = useTranslation();
   const columnRef = useRef<View>(null);
   const { colors, isDark } = useTheme();
 
@@ -167,7 +169,7 @@ export const DayColumn: React.FC<DayColumnProps> = ({
               <>
                 <Target size={12} color={colors.accentWarning} strokeWidth={2.5} />
                 <Text style={[styles.deliveryCountText, { color: colors.accentWarning }]}>
-                  {deliveryTasks.length} DUE
+                  {deliveryTasks.length} {t.board.dueBadge}
                 </Text>
               </>
             ) : (
@@ -215,13 +217,13 @@ export const DayColumn: React.FC<DayColumnProps> = ({
             <Text style={[styles.emptyPlus, { color: colors.textMuted }]}>+</Text>
             <Text style={[styles.emptyText, { color: colors.textMuted }]}>
               {filterMode === 'focused'
-                ? 'NO FOCUSED NODE'
+                ? t.board.noFocusedNode
                 : filterMode === 'in_progress'
-                ? 'NO ACTIVE TRACKERS'
-                : 'NO NODES'}
+                ? t.board.noActiveTrackers
+                : t.board.noNodes}
             </Text>
             <Text style={[styles.emptySubText, { color: colors.textSecondary }]}>
-              {filterMode === 'all' ? 'TAP TO CREATE' : 'CLICK ALL TO VIEW ALL'}
+              {filterMode === 'all' ? t.board.tapToCreate : t.board.clickAllToViewAll}
             </Text>
           </TouchableOpacity>
         ) : (

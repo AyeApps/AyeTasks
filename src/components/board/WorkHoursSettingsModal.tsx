@@ -23,6 +23,7 @@ import {
 import { THEME } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useUIStore } from '../../store/useUIStore';
+import { useTranslation } from '../../store/useLanguageStore';
 import { formatTimeInput, isValidTimeHHMM, formatTime12h } from '../../utils/dateUtils';
 
 interface WorkHoursSettingsModalProps {
@@ -33,14 +34,6 @@ interface WorkHoursSettingsModalProps {
 const START_PRESETS = ['07:00', '08:00', '08:30', '09:00', '10:00'];
 const END_PRESETS = ['15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
 
-const SHIFT_TEMPLATES = [
-  { label: '08:00 - 17:00', start: '08:00', end: '17:00', desc: '9H ESTÁNDAR' },
-  { label: '09:00 - 18:00', start: '09:00', end: '18:00', desc: '9H OFICINA' },
-  { label: '10:00 - 19:00', start: '10:00', end: '19:00', desc: '9H TARDE' },
-  { label: '08:00 - 14:00', start: '08:00', end: '14:00', desc: '6H MEDIA JORNADA' },
-  { label: '09:00 - 17:00', start: '09:00', end: '17:00', desc: '8H CONTINUA' },
-];
-
 export const WorkHoursSettingsModal: React.FC<WorkHoursSettingsModalProps> = ({
   isOpen,
   onClose,
@@ -48,6 +41,15 @@ export const WorkHoursSettingsModal: React.FC<WorkHoursSettingsModalProps> = ({
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
   const { colors } = useTheme();
+  const { t } = useTranslation();
+
+  const SHIFT_TEMPLATES = [
+    { label: '08:00 - 17:00', start: '08:00', end: '17:00', desc: t.workHoursModal.std9h },
+    { label: '09:00 - 18:00', start: '09:00', end: '18:00', desc: t.workHoursModal.office9h },
+    { label: '10:00 - 19:00', start: '10:00', end: '19:00', desc: t.workHoursModal.afternoon9h },
+    { label: '08:00 - 14:00', start: '08:00', end: '14:00', desc: t.workHoursModal.halfDay6h },
+    { label: '09:00 - 17:00', start: '09:00', end: '17:00', desc: t.workHoursModal.continuous8h },
+  ];
 
   const workStartTime = useUIStore((state) => state.workStartTime);
   const workEndTime = useUIStore((state) => state.workEndTime);
@@ -108,15 +110,15 @@ export const WorkHoursSettingsModal: React.FC<WorkHoursSettingsModalProps> = ({
 
   const handleSave = () => {
     if (!isValidTimeHHMM(startTime)) {
-      setErrorMsg('La hora de entrada debe tener un formato válido (HH:MM).');
+      setErrorMsg(t.workHoursModal.errorFormatStart);
       return;
     }
     if (!isValidTimeHHMM(endTime)) {
-      setErrorMsg('La hora de salida debe tener un formato válido (HH:MM).');
+      setErrorMsg(t.workHoursModal.errorFormatEnd);
       return;
     }
     if (!shiftDuration) {
-      setErrorMsg('La hora de salida debe ser posterior a la hora de entrada.');
+      setErrorMsg(t.workHoursModal.errorOrder);
       return;
     }
 
@@ -170,16 +172,16 @@ export const WorkHoursSettingsModal: React.FC<WorkHoursSettingsModalProps> = ({
               >
                 <Briefcase size={12} color={colors.accent} strokeWidth={2.5} />
                 <Text style={[styles.cyberBadgeText, { color: colors.accent }]}>
-                  WORK SHIFT & SCHEDULE ENGINE
+                  {t.workHoursModal.badge}
                 </Text>
               </View>
             </View>
 
             <Text style={[styles.title, { color: colors.textPrimary }]}>
-              HORARIO DE JORNADA LABORAL
+              {t.workHoursModal.title}
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Configura tu hora de entrada y salida para calcular la cuenta regresiva en vivo del día.
+              {t.workHoursModal.subtitle}
             </Text>
           </View>
 
@@ -187,7 +189,7 @@ export const WorkHoursSettingsModal: React.FC<WorkHoursSettingsModalProps> = ({
             {/* Quick Shift Templates */}
             <View style={styles.section}>
               <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
-                PLANTILLAS PREDEFINIDAS:
+                {t.workHoursModal.templatesLabel}
               </Text>
               <View style={styles.templateGrid}>
                 {SHIFT_TEMPLATES.map((tmpl) => {
@@ -237,7 +239,7 @@ export const WorkHoursSettingsModal: React.FC<WorkHoursSettingsModalProps> = ({
               <View style={{ flex: 1 }}>
                 <View style={styles.inputHeader}>
                   <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                    HORA DE ENTRADA (HH:MM):
+                    {t.workHoursModal.startLabel}
                   </Text>
                   {isValidTimeHHMM(startTime) ? (
                     <Text style={[styles.timePreview, { color: colors.accent }]}>
@@ -333,7 +335,7 @@ export const WorkHoursSettingsModal: React.FC<WorkHoursSettingsModalProps> = ({
               <View style={{ flex: 1, marginLeft: isMobile ? 0 : 16, marginTop: isMobile ? 12 : 0 }}>
                 <View style={styles.inputHeader}>
                   <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                    HORA DE SALIDA (HH:MM):
+                    {t.workHoursModal.endLabel}
                   </Text>
                   {isValidTimeHHMM(endTime) ? (
                     <Text style={[styles.timePreview, { color: colors.accentWarning }]}>
@@ -448,10 +450,10 @@ export const WorkHoursSettingsModal: React.FC<WorkHoursSettingsModalProps> = ({
                 <Clock size={16} color={colors.accent} />
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.previewTitle, { color: colors.textPrimary }]}>
-                    DURACIÓN TOTAL DE LA JORNADA:
+                    {t.workHoursModal.totalShiftDuration}
                   </Text>
                   <Text style={[styles.previewVal, { color: colors.accent }]}>
-                    {shiftDuration.hours} HORAS {shiftDuration.mins > 0 ? `${shiftDuration.mins} MINUTOS` : ''} // {shiftDuration.totalMins} MINUTOS
+                    {shiftDuration.hours} {t.workHoursModal.hoursText} {shiftDuration.mins > 0 ? `${shiftDuration.mins} ${t.workHoursModal.minutesText}` : ''} // {shiftDuration.totalMins} {t.workHoursModal.minutesText}
                   </Text>
                 </View>
               </View>
@@ -471,7 +473,7 @@ export const WorkHoursSettingsModal: React.FC<WorkHoursSettingsModalProps> = ({
               onPress={onClose}
               activeOpacity={0.7}
             >
-              <Text style={[styles.cancelText, { color: colors.textPrimary }]}>CANCELAR</Text>
+              <Text style={[styles.cancelText, { color: colors.textPrimary }]}>{t.workHoursModal.cancelBtn}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -487,7 +489,7 @@ export const WorkHoursSettingsModal: React.FC<WorkHoursSettingsModalProps> = ({
             >
               <Check size={14} color={colors.textInvert} strokeWidth={3} />
               <Text style={[styles.saveText, { color: colors.textInvert }]}>
-                GUARDAR JORNADA
+                {t.workHoursModal.saveBtn}
               </Text>
             </TouchableOpacity>
           </View>

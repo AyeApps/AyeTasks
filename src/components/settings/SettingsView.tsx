@@ -245,16 +245,16 @@ export const SettingsView: React.FC = () => {
         >
           <ArrowLeft size={16} color={colors.textPrimary} strokeWidth={2.5} />
           <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>
-            RETURN TO BOARD
+            {t.settings.returnToBoard}
           </Text>
         </TouchableOpacity>
 
         <View style={styles.headerTitleGroup}>
           <Text style={[styles.headerTitleText, { color: colors.textPrimary }]}>
-            SETTINGS // SYSTEM CONFIGURATION
+            {t.settings.title}
           </Text>
           <Text style={[styles.headerSubText, { color: colors.accent }]}>
-            AYETASKS CYBER-ENGINE V1.0
+            {t.settings.subTitle}
           </Text>
         </View>
       </View>
@@ -286,7 +286,7 @@ export const SettingsView: React.FC = () => {
               <View style={styles.cardHeader}>
                 <Shield size={16} color={colors.accent} strokeWidth={2.5} />
                 <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-                  OPERATOR PROFILE & CLOUD REPLICATION
+                  {t.settings.operatorProfile}
                 </Text>
               </View>
 
@@ -304,7 +304,7 @@ export const SettingsView: React.FC = () => {
                 >
                   <Edit3 size={13} color={colors.accent} strokeWidth={2.5} />
                   <Text style={[styles.editAccountBtnText, { color: colors.textPrimary }]}>
-                    EDIT PROFILE
+                    {t.settings.editProfile}
                   </Text>
                 </TouchableOpacity>
               ) : null}
@@ -356,7 +356,7 @@ export const SettingsView: React.FC = () => {
               <View style={styles.editForm}>
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                    OPERATOR NAME / ALIAS:
+                    {t.settings.operatorName}
                   </Text>
                   <View style={[styles.inputWrapper, { borderColor: colors.borderColor, backgroundColor: colors.bgBase }]}>
                     <UserIcon size={15} color={colors.textMuted} />
@@ -373,7 +373,7 @@ export const SettingsView: React.FC = () => {
 
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                    ACCOUNT EMAIL ADDRESS:
+                    {t.settings.accountEmail}
                   </Text>
                   <View style={[styles.inputWrapper, { borderColor: colors.borderColor, backgroundColor: colors.bgBase }]}>
                     <Mail size={15} color={colors.textMuted} />
@@ -397,7 +397,7 @@ export const SettingsView: React.FC = () => {
                 >
                   <Lock size={13} color={colors.accentWarning} />
                   <Text style={[styles.togglePasswordText, { color: colors.accentWarning }]}>
-                    {showPasswordChange ? '− HIDE PASSWORD MODIFICATION' : '+ CHANGE ACCOUNT PASSWORD (OPTIONAL)'}
+                    {showPasswordChange ? `− ${t.settings.hidePassword}` : `+ ${t.settings.changePassword}`}
                   </Text>
                 </TouchableOpacity>
 
@@ -405,7 +405,7 @@ export const SettingsView: React.FC = () => {
                   <View style={[styles.passwordBox, { borderColor: colors.borderMuted, backgroundColor: colors.bgBase }]}>
                     <View style={styles.inputGroup}>
                       <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                        CURRENT PASSWORD:
+                        {t.settings.currentPassword}
                       </Text>
                       <View style={[styles.inputWrapper, { borderColor: colors.borderColor, backgroundColor: colors.bgSurface }]}>
                         <Lock size={15} color={colors.textMuted} />
@@ -422,7 +422,7 @@ export const SettingsView: React.FC = () => {
 
                     <View style={[styles.inputGroup, { marginTop: 10 }]}>
                       <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
-                        NEW PASSWORD (MIN. 8 CHARS):
+                        {t.settings.newPassword}
                       </Text>
                       <View style={[styles.inputWrapper, { borderColor: colors.borderColor, backgroundColor: colors.bgSurface }]}>
                         <Lock size={15} color={colors.textMuted} />
@@ -460,7 +460,7 @@ export const SettingsView: React.FC = () => {
                       <>
                         <Save size={14} color={colors.textInvert} strokeWidth={2.5} />
                         <Text style={[styles.saveBtnText, { color: colors.textInvert }]}>
-                          SAVE ACCOUNT CHANGES
+                          {t.settings.saveAccountChanges}
                         </Text>
                       </>
                     )}
@@ -480,7 +480,7 @@ export const SettingsView: React.FC = () => {
                   >
                     <X size={14} color={colors.textSecondary} />
                     <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>
-                      CANCEL
+                      {t.settings.cancelBtn}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -508,19 +508,19 @@ export const SettingsView: React.FC = () => {
                 <View>
                   <Text style={[styles.syncStatusTitle, { color: colors.textPrimary }]}>
                     {syncStatus === 'synced'
-                      ? 'CLOUD STORAGE SYNCHRONIZED'
+                      ? t.settings.cloudSynced
                       : syncStatus === 'syncing'
-                      ? 'SYNCING IN FLIGHT...'
+                      ? t.settings.syncingInFlight
                       : syncStatus === 'pending'
-                      ? `CHANGES PENDING SYNC (${pendingSyncCount})`
-                      : 'OFFLINE CACHE MODE'}
+                      ? `${t.settings.changesPending} (${pendingSyncCount})`
+                      : t.settings.offlineCache}
                   </Text>
                   <Text style={[styles.syncStatusSub, { color: colors.textSecondary }]}>
                     {syncStatus === 'synced'
-                      ? 'All nodes, timer records & links confirmed in MongoDB Atlas.'
+                      ? t.settings.cloudSyncedDesc
                       : syncStatus === 'pending'
-                      ? 'Local modifications queued. Tap button to upload now.'
-                      : 'Working from offline SQLite/AsyncStorage cache.'}
+                      ? t.settings.changesPendingDesc
+                      : t.settings.offlineCacheDesc}
                   </Text>
                 </View>
               </View>
@@ -571,10 +571,10 @@ export const SettingsView: React.FC = () => {
                   ]}
                 >
                   {isSyncingManually || syncStatus === 'syncing'
-                    ? 'SYNCING...'
+                    ? t.settings.syncingInFlight
                     : justSynced
-                    ? '✓ SYNCED!'
-                    : 'SYNC NOW'}
+                    ? t.settings.syncedSuccess
+                    : t.settings.syncNow}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -594,13 +594,13 @@ export const SettingsView: React.FC = () => {
             <View style={styles.cardHeader}>
               <Briefcase size={16} color={colors.accentWarning} strokeWidth={2.5} />
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-                WORK SHIFT & SCHEDULE ENGINE
+                {t.settings.workHoursTitle}
               </Text>
             </View>
 
             <View style={styles.shiftOverviewRow}>
               <View style={styles.shiftTimeBlock}>
-                <Text style={[styles.shiftBlockLabel, { color: colors.textMuted }]}>SHIFT START</Text>
+                <Text style={[styles.shiftBlockLabel, { color: colors.textMuted }]}>{t.settings.startHour}</Text>
                 <Text style={[styles.shiftBlockValue, { color: colors.textPrimary }]}>
                   {formatTime12h(workStartTime)} ({workStartTime})
                 </Text>
@@ -609,7 +609,7 @@ export const SettingsView: React.FC = () => {
               <View style={[styles.shiftArrowDivider, { backgroundColor: colors.borderMuted }]} />
 
               <View style={styles.shiftTimeBlock}>
-                <Text style={[styles.shiftBlockLabel, { color: colors.textMuted }]}>SHIFT END</Text>
+                <Text style={[styles.shiftBlockLabel, { color: colors.textMuted }]}>{t.settings.endHour}</Text>
                 <Text style={[styles.shiftBlockValue, { color: colors.textPrimary }]}>
                   {formatTime12h(workEndTime)} ({workEndTime})
                 </Text>
@@ -618,7 +618,7 @@ export const SettingsView: React.FC = () => {
               <View style={[styles.shiftArrowDivider, { backgroundColor: colors.borderMuted }]} />
 
               <View style={styles.shiftTimeBlock}>
-                <Text style={[styles.shiftBlockLabel, { color: colors.textMuted }]}>DAILY DURATION</Text>
+                <Text style={[styles.shiftBlockLabel, { color: colors.textMuted }]}>{t.settings.dailyShift}</Text>
                 <Text style={[styles.shiftBlockValue, { color: colors.accent }]}>
                   {calculateShiftDuration()}
                 </Text>
@@ -639,7 +639,7 @@ export const SettingsView: React.FC = () => {
             >
               <Sliders size={15} color={colors.accent} strokeWidth={2.5} />
               <Text style={[styles.cardActionBtnText, { color: colors.textPrimary }]}>
-                EDIT WORK SHIFT HOURS & PRESETS
+                {t.settings.editShiftBtn}
               </Text>
             </TouchableOpacity>
           </View>
@@ -888,31 +888,31 @@ export const SettingsView: React.FC = () => {
             <View style={styles.cardHeader}>
               <Database size={16} color={colors.accent} strokeWidth={2.5} />
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-                LOCAL DATA & CACHE TELEMETRY
+                {t.settings.telemetryTitle}
               </Text>
             </View>
 
             <View style={styles.dataStatsRow}>
               <View style={styles.dataStatBox}>
                 <Text style={[styles.dataStatVal, { color: colors.textPrimary }]}>{totalTasks}</Text>
-                <Text style={[styles.dataStatLbl, { color: colors.textMuted }]}>TOTAL TASKS</Text>
+                <Text style={[styles.dataStatLbl, { color: colors.textMuted }]}>{t.settings.totalTasks}</Text>
               </View>
               <View style={[styles.dataStatDivider, { backgroundColor: colors.borderMuted }]} />
               <View style={styles.dataStatBox}>
                 <Text style={[styles.dataStatVal, { color: colors.accent }]}>{completedTasks}</Text>
-                <Text style={[styles.dataStatLbl, { color: colors.textMuted }]}>COMPLETED</Text>
+                <Text style={[styles.dataStatLbl, { color: colors.textMuted }]}>{t.settings.completedTasks}</Text>
               </View>
               <View style={[styles.dataStatDivider, { backgroundColor: colors.borderMuted }]} />
               <View style={styles.dataStatBox}>
                 <Text style={[styles.dataStatVal, { color: colors.textPrimary }]}>{connections.length}</Text>
-                <Text style={[styles.dataStatLbl, { color: colors.textMuted }]}>FLOW LINKS</Text>
+                <Text style={[styles.dataStatLbl, { color: colors.textMuted }]}>{t.settings.flowLinks}</Text>
               </View>
               <View style={[styles.dataStatDivider, { backgroundColor: colors.borderMuted }]} />
               <View style={styles.dataStatBox}>
                 <Text style={[styles.dataStatVal, { color: colors.accentWarning }]}>
                   {formatDigitalTimer(totalLoggedSeconds)}
                 </Text>
-                <Text style={[styles.dataStatLbl, { color: colors.textMuted }]}>LOGGED TIME</Text>
+                <Text style={[styles.dataStatLbl, { color: colors.textMuted }]}>{t.settings.loggedTime}</Text>
               </View>
             </View>
           </View>
@@ -932,7 +932,7 @@ export const SettingsView: React.FC = () => {
             <View style={styles.cardHeader}>
               <Info size={16} color={colors.accent} strokeWidth={2.5} />
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-                ABOUT AYETASKS
+                {t.settings.aboutTitle}
               </Text>
             </View>
 

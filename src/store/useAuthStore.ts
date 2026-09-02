@@ -71,6 +71,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           const hashParams = new URLSearchParams(hashString);
           const searchParams = new URLSearchParams(searchString);
 
+          const errorParam = hashParams.get('error') || searchParams.get('error');
+          if (errorParam) {
+            set({ error: errorParam === 'apple_auth_failed' ? 'Error al autenticar con Apple' : errorParam });
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+
           const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
           const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
 

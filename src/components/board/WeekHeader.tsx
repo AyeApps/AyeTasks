@@ -111,14 +111,14 @@ export const WeekHeader: React.FC = () => {
   // Relative week descriptor
   const relativeBadge =
     diffWeeks === 0
-      ? (language === 'es' ? 'SEMANA ACTIVA' : 'CURRENT ACTIVE WEEK')
+      ? t.header.activeWeek
       : diffWeeks === 1
-      ? (language === 'es' ? '+1 SEMANA ADELANTE' : '+1 WEEK AHEAD')
+      ? t.header.weekAhead
       : diffWeeks > 1
-      ? `+${diffWeeks} ${language === 'es' ? 'SEMS ADELANTE' : 'WKS AHEAD'}`
+      ? `+${diffWeeks} ${t.header.weeksAhead}`
       : diffWeeks === -1
-      ? (language === 'es' ? 'HACE 1 SEM' : '1 WK AGO')
-      : `${Math.abs(diffWeeks)} ${language === 'es' ? 'SEMS ATRÁS' : 'WKS AGO'}`;
+      ? t.header.weekAgo
+      : `${Math.abs(diffWeeks)} ${t.header.weeksAgo}`;
 
   const weekDays = React.useMemo(
     () => getWeekDays(currentReferenceDate, language),
@@ -292,12 +292,12 @@ export const WeekHeader: React.FC = () => {
                 ]}
               >
                 {syncStatus === 'synced'
-                  ? 'CLOUD SYNCED'
+                  ? t.header.synced
                   : syncStatus === 'syncing'
-                  ? 'SYNCING...'
+                  ? t.header.syncing
                   : syncStatus === 'pending'
-                  ? `PENDING SYNC (${pendingSyncCount})`
-                  : 'LOCAL CACHE'}
+                  ? `${t.header.pendingSync} (${pendingSyncCount})`
+                  : t.header.localCache}
               </Text>
             </TouchableOpacity>
           ) : null}
@@ -426,7 +426,7 @@ export const WeekHeader: React.FC = () => {
                     >
                       <LogOut size={14} color={colors.accentDanger} strokeWidth={2.5} />
                       <Text style={[styles.logoutButtonText, { color: colors.accentDanger }]}>
-                        LOG OUT
+                        {t.common.logout}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -446,7 +446,7 @@ export const WeekHeader: React.FC = () => {
               onPress={openAuthModal}
             >
               <Key size={14} color={colors.textInvert} strokeWidth={2.5} />
-              <Text style={[styles.loginBtnText, { color: colors.textInvert }]}>LOGIN</Text>
+              <Text style={[styles.loginBtnText, { color: colors.textInvert }]}>{t.header.loginBtn}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -497,7 +497,7 @@ export const WeekHeader: React.FC = () => {
             <ChevronLeft size={18} color={colors.textPrimary} strokeWidth={2.5} />
             {!isMobile ? (
               <Text style={[styles.shiftBtnText, { color: colors.textPrimary }]}>
-                PREV
+                {t.header.prevBtn}
               </Text>
             ) : null}
           </TouchableOpacity>
@@ -526,7 +526,7 @@ export const WeekHeader: React.FC = () => {
                 },
               ]}
             >
-              TODAY
+              {t.header.todayBtn}
             </Text>
           </TouchableOpacity>
 
@@ -544,7 +544,7 @@ export const WeekHeader: React.FC = () => {
           >
             {!isMobile ? (
               <Text style={[styles.shiftBtnText, { color: colors.textPrimary }]}>
-                NEXT
+                {t.header.nextBtn}
               </Text>
             ) : null}
             <ChevronRight size={18} color={colors.textPrimary} strokeWidth={2.5} />
@@ -564,7 +564,7 @@ export const WeekHeader: React.FC = () => {
               ]}
             >
               <Text style={[styles.weekBadgeBoxText, { color: colors.textInvert }]}>
-                WEEK {weekNumber.toString().padStart(2, '0')} // {monday.getFullYear()}
+                {t.header.weekTitlePrefix} {weekNumber.toString().padStart(2, '0')} // {monday.getFullYear()}
               </Text>
             </View>
           ) : null}
@@ -671,7 +671,7 @@ export const WeekHeader: React.FC = () => {
               <View style={styles.telemetryHeaderRow}>
                 <CheckCircle2 size={14} color={colors.accent} />
                 <Text style={[styles.telemetryCount, { color: colors.textPrimary }]}>
-                  {completedTasks.length}/{weekTasks.length} NODES
+                  {completedTasks.length}/{weekTasks.length} {t.header.nodesCount}
                 </Text>
                 <Text style={[styles.telemetryPercentage, { color: colors.accent }]}>
                   {completionPercentage}%
