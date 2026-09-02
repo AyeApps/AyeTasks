@@ -3,20 +3,51 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authStorage } from './authStorage';
 
 export function getApiBaseUrl(): string {
-  let url = process.env.EXPO_PUBLIC_API_URL || 'https://api-aytsks.ayeapps.com/api/v1';
-  if (Platform.OS === 'android' && url.includes('localhost')) {
-    url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    let url = process.env.EXPO_PUBLIC_API_URL;
+    if (Platform.OS === 'android' && url.includes('localhost')) {
+      url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
+    }
+    return url;
   }
-  return url;
+
+  // Auto-detect local development
+  const isWebLocal =
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  if (__DEV__ || isWebLocal) {
+    const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+    return `http://${host}:8001/api/v1`;
+  }
+
+  return 'https://api-aytsks.ayeapps.com/api/v1';
 }
 
 export function getAuthApiBaseUrl(): string {
-  let url = process.env.EXPO_PUBLIC_AUTH_API_URL || 'https://api-auth.ayeapps.com/api/v1';
-  if (Platform.OS === 'android' && url.includes('localhost')) {
-    url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
+  if (process.env.EXPO_PUBLIC_AUTH_API_URL) {
+    let url = process.env.EXPO_PUBLIC_AUTH_API_URL;
+    if (Platform.OS === 'android' && url.includes('localhost')) {
+      url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
+    }
+    return url;
   }
-  return url;
+
+  // Auto-detect local development
+  const isWebLocal =
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+  if (__DEV__ || isWebLocal) {
+    const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+    return `http://${host}:8000/api/v1`;
+  }
+
+  return 'https://api-auth.ayeapps.com/api/v1';
 }
+
 
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;

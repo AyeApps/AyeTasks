@@ -28,7 +28,24 @@
       "usesCleartextTraffic": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "AyeTasks — Gestor de Tareas y Proyectos",
+      "shortName": "AyeTasks",
+      "description": "Organiza tus pendientes y proyectos en tickets con subtareas y registro de tiempo.",
+      "themeColor": "#FE9D01",
+      "backgroundColor": "#050505",
+      "meta": {
+        "viewport": "width=device-width, initial-scale=1, shrink-to-fit=no",
+        "description": "Organiza tus pendientes y proyectos en tickets con subtareas y registro de tiempo.",
+        "keywords": "gestor de tareas, app de proyectos, tickets de trabajo, registro de horas, subtareas, AyeTasks",
+        "og:title": "AyeTasks — Gestor de Tareas y Proyectos",
+        "og:description": "Organiza tus pendientes y proyectos en tickets con subtareas y registro de tiempo.",
+        "og:url": "https://tasks.ayeapps.com",
+        "og:type": "website",
+        "twitter:card": "summary_large_image",
+        "twitter:title": "AyeTasks — Gestor de Tareas y Proyectos",
+        "twitter:description": "Organiza tus pendientes y proyectos en tickets con subtareas y registro de tiempo."
+      }
     },
     "plugins": [
       "expo-secure-store",
