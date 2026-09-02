@@ -181,17 +181,16 @@ export const AuthScreen: React.FC = () => {
         }
       } else {
         // Cross-platform Apple OAuth 2.0 Web flow for Web & Android
-        let triedPopup = false;
+        const callbackUrl = `${getAuthApiBaseUrl()}/auth/oauth/apple/callback`;
+        const serviceId = process.env.EXPO_PUBLIC_APPLE_SERVICE_ID || 'com.ayeapps.ayetasks.auth';
+
         if (Platform.OS === 'web' && typeof window !== 'undefined' && (window as any).AppleID?.auth) {
           try {
-            triedPopup = true;
             const appleAuth = (window as any).AppleID.auth;
-            const origin = window.location.origin;
-            const serviceId = process.env.EXPO_PUBLIC_APPLE_SERVICE_ID || 'com.ayeapps.ayetasks.auth';
             appleAuth.init({
               clientId: serviceId,
               scope: 'name email',
-              redirectURI: origin,
+              redirectURI: callbackUrl,
               usePopup: true,
             });
             const response = await appleAuth.signIn();
@@ -203,7 +202,9 @@ export const AuthScreen: React.FC = () => {
               return;
             }
           } catch (popupErr: any) {
+            console.warn('[Apple Auth] Popup warning/fallback:', popupErr);
             if (popupErr.code === 'ERR_REQUEST_CANCELED' || popupErr.error === 'popup_closed_by_user') {
+              // User intentionally closed popup or cancelled
               return;
             }
             // Fall through to standard OAuth redirect flow if popup failed or origin mismatched
@@ -218,8 +219,6 @@ export const AuthScreen: React.FC = () => {
           nonce,
         });
         const state = encodeURIComponent(statePayload);
-        const callbackUrl = `${getAuthApiBaseUrl()}/auth/oauth/apple/callback`;
-        const serviceId = process.env.EXPO_PUBLIC_APPLE_SERVICE_ID || 'com.ayeapps.ayetasks.auth';
 
         const authUrl =
           `https://appleid.apple.com/auth/authorize?` +
