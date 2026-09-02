@@ -180,36 +180,9 @@ export const AuthScreen: React.FC = () => {
           await loginWithApple(credential.identityToken, fullName, credential.email || undefined);
         }
       } else {
-        // Cross-platform Apple OAuth 2.0 Web flow for Web & Android
+        // Cross-platform Apple OAuth 2.0 Flow for Web & Android
         const callbackUrl = `${getAuthApiBaseUrl()}/auth/oauth/apple/callback`;
         const serviceId = process.env.EXPO_PUBLIC_APPLE_SERVICE_ID || 'com.ayeapps.ayetasks.auth';
-
-        if (Platform.OS === 'web' && typeof window !== 'undefined' && (window as any).AppleID?.auth) {
-          try {
-            const appleAuth = (window as any).AppleID.auth;
-            appleAuth.init({
-              clientId: serviceId,
-              scope: 'name email',
-              redirectURI: callbackUrl,
-              usePopup: true,
-            });
-            const response = await appleAuth.signIn();
-            if (response?.authorization?.id_token) {
-              const fullName = response.user?.name
-                ? [response.user.name.firstName, response.user.name.lastName].filter(Boolean).join(' ')
-                : undefined;
-              await loginWithApple(response.authorization.id_token, fullName, response.user?.email || undefined);
-              return;
-            }
-          } catch (popupErr: any) {
-            console.warn('[Apple Auth] Popup warning/fallback:', popupErr);
-            if (popupErr.code === 'ERR_REQUEST_CANCELED' || popupErr.error === 'popup_closed_by_user') {
-              // User intentionally closed popup or cancelled
-              return;
-            }
-            // Fall through to standard OAuth redirect flow if popup failed or origin mismatched
-          }
-        }
 
         const rawNonce = await Crypto.getRandomBytesAsync(16);
         const nonce = Array.from(rawNonce).map((b) => b.toString(16).padStart(2, '0')).join('');
