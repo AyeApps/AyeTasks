@@ -182,7 +182,8 @@ export const AuthScreen: React.FC = () => {
       } else {
         // Cross-platform Apple OAuth 2.0 Flow for Web & Android
         const callbackUrl = `${getAuthApiBaseUrl()}/auth/oauth/apple/callback`;
-        const serviceId = process.env.EXPO_PUBLIC_APPLE_SERVICE_ID || 'com.ayeapps.auth';
+        const rawServiceId = process.env.EXPO_PUBLIC_APPLE_SERVICE_ID;
+        const serviceId = rawServiceId && rawServiceId !== 'com.ayeapps.ayetasks.auth' ? rawServiceId : 'com.ayeapps.auth';
 
         const rawNonce = await Crypto.getRandomBytesAsync(16);
         const nonce = Array.from(rawNonce).map((b) => b.toString(16).padStart(2, '0')).join('');
