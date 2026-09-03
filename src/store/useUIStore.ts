@@ -1,7 +1,6 @@
 import { Appearance } from 'react-native';
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { registerSessionPurgeHandler } from './useAuthStore';
 import { DARK_THEME, getThemeColors, ThemeColors } from '../constants/theme';
 
 export type ViewMode = 'week' | 'focus' | 'analytics' | 'settings';
@@ -77,6 +76,18 @@ interface UIStore {
   cancelConnecting: () => void;
   selectTask: (taskId: string | null) => void;
 
+  // Toast Notifications Stack (The Precision Atelier / AyeVideo Style)
+  toasts: ToastMessage[];
+  showToast: (
+    text: string,
+    type?: 'info' | 'success' | 'warning' | 'error' | 'delete' | 'sync',
+    title?: string,
+    durationMs?: number,
+    action?: ToastAction,
+    customTheme?: ToastCustomTheme
+  ) => void;
+  hideToast: (id?: string) => void;
+
   openQuickAdd: (dateString: string, parentTaskId?: string) => void;
   closeQuickAdd: () => void;
   openAuthModal: () => void;
@@ -84,6 +95,31 @@ interface UIStore {
   openWorkHoursModal: () => void;
   closeWorkHoursModal: () => void;
   resetUserUIState: () => void;
+}
+
+export interface ToastAction {
+  label: string;
+  onPress: () => void;
+}
+
+export interface ToastCustomTheme {
+  backgroundColor?: string;
+  borderColor?: string;
+  textColor?: string;
+  titleColor?: string;
+  iconBg?: string;
+  iconColor?: string;
+  progressColor?: string;
+}
+
+export interface ToastMessage {
+  id: string;
+  title: string;
+  text: string;
+  type: 'info' | 'success' | 'warning' | 'error' | 'delete' | 'sync';
+  durationMs: number;
+  action?: ToastAction;
+  customTheme?: ToastCustomTheme;
 }
 
 const getTodayDayIndex = (): number => {
@@ -113,6 +149,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
   quickAddParentTaskId: null,
   isAuthModalOpen: false,
   isWorkHoursModalOpen: false,
+  toasts: [],
 
   resetUserUIState: () =>
     set({
@@ -128,6 +165,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       isAuthModalOpen: false,
       isWorkHoursModalOpen: false,
       pendingSyncCount: 0,
+      toasts: [],
     }),
 
     setSelectedMobileDayIndex: (index: number) =>
@@ -192,6 +230,12 @@ export const useUIStore = create<UIStore>((set, get) => ({
       themeColors: getThemeColors(effective),
     });
     AsyncStorage.setItem(THEME_STORAGE_KEY, nextMode);
+    get().showToast(
+      effective === 'dark' ? 'Tema visual cambiado a Modo Oscuro' : 'Tema visual cambiado a Modo Claro',
+      'info',
+      '// TEMA VISUAL',
+      3500
+    );
   },
 
   setThemeMode: (mode: ThemePreference) => {
@@ -202,6 +246,16 @@ export const useUIStore = create<UIStore>((set, get) => ({
       themeColors: getThemeColors(effective),
     });
     AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
+    get().showToast(
+      mode === 'system'
+        ? `Tema sincronizado con el sistema (${effective})`
+        : effective === 'dark'
+        ? 'Tema visual cambiado a Modo Oscuro'
+        : 'Tema visual cambiado a Modo Claro',
+      'info',
+      '// TEMA VISUAL',
+      3500
+    );
   },
 
   initWorkHours: async () => {
@@ -224,6 +278,12 @@ export const useUIStore = create<UIStore>((set, get) => ({
     AsyncStorage.setItem(
       WORK_HOURS_STORAGE_KEY,
       JSON.stringify({ workStartTime: start, workEndTime: end })
+    );
+    get().showToast(
+      `Jornada laboral actualizada: ${start} — ${end}`,
+      'success',
+      '// JORNADA ACTUALIZADA',
+      4500
     );
   },
 
@@ -292,9 +352,41 @@ export const useUIStore = create<UIStore>((set, get) => ({
 
   openWorkHoursModal: () => set({ isWorkHoursModalOpen: true }),
   closeWorkHoursModal: () => set({ isWorkHoursModalOpen: false }),
+
+  showToast: (text, type = 'info', title, durationMs = 4500, action, customTheme) => {
+    const id = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const defaultTitle =
+      title ||
+      (type === 'success'
+        ? '// ACCIÓN EXITOSA'
+        : type === 'error'
+        ? '// FALLO DEL SISTEMA'
+        : type === 'delete'
+        ? '// NODO ELIMINADO'
+        : type === 'warning'
+        ? '// AVISO DE SINCRONIZACIÓN'
+        : type === 'sync'
+        ? '// TELEMETRÍA LIVE'
+        : '// TELEMETRÍA');
+    const newToast: ToastMessage = {
+      id,
+      text,
+      type,
+      title: defaultTitle,
+      durationMs,
+      action,
+      customTheme,
+    };
+    set((state) => ({
+      // Limit to 4 visible stacked notifications so viewport remains uncluttered
+      toasts: [...state.toasts.slice(-3), newToast],
+    }));
+  },
+  hideToast: (id?: string) => {
+    set((state) => ({
+      toasts: id ? state.toasts.filter((t) => t.id !== id) : [],
+    }));
+  },
 }));
 
-registerSessionPurgeHandler(() => {
-  useUIStore.getState().resetUserUIState();
-});
 

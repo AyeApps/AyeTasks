@@ -24,6 +24,7 @@ import { useTimerStore } from './src/store/useTimerStore';
 import { useUIStore } from './src/store/useUIStore';
 import { useLanguageStore } from './src/store/useLanguageStore';
 import { AnimatedDotBackground } from './src/components/canvas/AnimatedDotBackground';
+import { ToastNotification } from './src/components/ui/ToastNotification';
 
 export default function App() {
   const initAuth = useAuthStore((state) => state.initAuth);
@@ -195,6 +196,12 @@ export default function App() {
           transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1) !important;
         }
 
+        /* 7. Status Toast Notification Keyframes (Exact AyeVideo Spec) */
+        @keyframes toastSlideUp {
+          0% { opacity: 0; transform: translateY(20px) scale(0.96); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           *, ::before, ::after {
             animation-duration: 0.01ms !important;
@@ -260,6 +267,9 @@ export default function App() {
           </View>
         </SafeAreaView>
       )}
+
+      {/* Global Toast Feedback System (Atelier Cyber DNA) */}
+      <ToastNotification />
     </View>
   );
 }

@@ -7,11 +7,30 @@ import { useTimerStore } from '../store/useTimerStore';
 import { useUIStore } from '../store/useUIStore';
 
 export function getWsBaseUrl(): string {
-  let url = process.env.EXPO_PUBLIC_WS_URL || 'wss://api-aytsks.ayeapps.com/api/v1/ws/sync';
-  if (Platform.OS === 'android' && url.includes('localhost')) {
-    url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
+  if (process.env.EXPO_PUBLIC_WS_URL) {
+    let url = process.env.EXPO_PUBLIC_WS_URL;
+    if (Platform.OS === 'android' && url.includes('localhost')) {
+      url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
+    }
+    return url;
   }
-  return url;
+
+  // Auto-detect local development
+  const isWebLocal =
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('192.168.') ||
+      window.location.hostname.startsWith('10.') ||
+      window.location.hostname.endsWith('.local'));
+
+  if (__DEV__ || isWebLocal) {
+    const host = Platform.OS === 'android' ? '10.0.2.2' : (typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost');
+    return `ws://${host}:8001/api/v1/ws/sync`;
+  }
+
+  return 'wss://api-aytsks.ayeapps.com/api/v1/ws/sync';
 }
 
 export function useSyncSocket() {
@@ -177,11 +196,13 @@ export function useSyncSocket() {
           clearTimeout(reconnectTimeoutRef.current);
           reconnectTimeoutRef.current = null;
         }
+        useUIStore.getState().showToast('Conexión de red restablecida. Sincronizando.', 'info', '// CONEXIÓN RESTABLECIDA');
         connect();
       };
       handleOffline = () => {
         setBackendStatus('offline');
         setSyncStatus('offline');
+        useUIStore.getState().showToast('Sin conexión a red. Trabajando en modo local.', 'warning', '// MODO OFFLINE');
       };
       window.addEventListener('online', handleOnline);
       window.addEventListener('offline', handleOffline);

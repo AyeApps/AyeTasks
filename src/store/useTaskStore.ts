@@ -100,6 +100,10 @@ export const useTaskStore = create<TaskStore>((set, get) => {
               date: t.date,
               due_date: t.dueDate,
               due_time: t.dueTime,
+              task_type: t.taskType,
+              start_time: t.startTime,
+              end_time: t.endTime,
+              location: t.location,
               estimated_duration_minutes: t.estimatedDurationMinutes,
               priority: t.priority,
               color_tag: t.colorTag,
@@ -168,9 +172,22 @@ export const useTaskStore = create<TaskStore>((set, get) => {
         } else {
           useUIStore.getState().setSyncStatus('pending', remaining);
         }
+
+        useUIStore.getState().showToast(
+          'Base de datos y conexiones sincronizadas',
+          'success',
+          '// SINCRONIZACIÓN EXITOSA',
+          3500
+        );
       } catch (err) {
         console.warn('Error during syncPendingMutations:', err);
         useUIStore.getState().setSyncStatus('pending', getPendingCount());
+        useUIStore.getState().showToast(
+          'Fallo al conectar con el servidor',
+          'error',
+          '// ERROR DE SINCRONIZACIÓN',
+          4000
+        );
       }
     },
 
@@ -216,6 +233,10 @@ export const useTaskStore = create<TaskStore>((set, get) => {
             date: t.date,
             dueDate: t.due_date,
             dueTime: t.due_time,
+            taskType: t.task_type || 'task',
+            startTime: t.start_time,
+            endTime: t.end_time,
+            location: t.location,
             estimatedDurationMinutes: t.estimated_duration_minutes || 30,
             actualDurationSeconds: t.actual_duration_seconds || 0,
             status: t.status,
@@ -277,6 +298,10 @@ export const useTaskStore = create<TaskStore>((set, get) => {
         date: taskData.date || new Date().toISOString().split('T')[0],
         dueDate: taskData.dueDate,
         dueTime: taskData.dueTime,
+        taskType: taskData.taskType || 'task',
+        startTime: taskData.startTime,
+        endTime: taskData.endTime,
+        location: taskData.location,
         estimatedDurationMinutes: taskData.estimatedDurationMinutes || 30,
         actualDurationSeconds: 0,
         status: 'todo',
@@ -292,6 +317,14 @@ export const useTaskStore = create<TaskStore>((set, get) => {
       const updatedTasks = [...get().tasks, newTask];
       set({ tasks: updatedTasks });
       await AsyncStorage.setItem(tasksKey, JSON.stringify(updatedTasks));
+
+      useUIStore.getState().showToast(
+        newTask.taskType === 'event'
+          ? `Evento "${newTask.title}" programado correctamente`
+          : `Tarea "${newTask.title}" creada en el tablero`,
+        'success',
+        newTask.taskType === 'event' ? '// EVENTO AGENDADO' : '// TAREA CREADA'
+      );
 
       // If it has a parent task, create connection immediately
       if (taskData.parentTaskId) {
@@ -326,6 +359,10 @@ export const useTaskStore = create<TaskStore>((set, get) => {
             date: newTask.date,
             due_date: newTask.dueDate,
             due_time: newTask.dueTime,
+            task_type: newTask.taskType,
+            start_time: newTask.startTime,
+            end_time: newTask.endTime,
+            location: newTask.location,
             estimated_duration_minutes: newTask.estimatedDurationMinutes,
             priority: newTask.priority,
             color_tag: newTask.colorTag,
@@ -355,8 +392,13 @@ export const useTaskStore = create<TaskStore>((set, get) => {
           useUIStore.getState().setSyncStatus(pending === 0 ? 'synced' : 'pending', pending);
           return serverTask;
         } catch (err) {
-          console.warn('Could not sync created task to MongoDB:', err);
+          console.warn('Could not persist task to MongoDB:', err);
           useUIStore.getState().setSyncStatus('pending', getPendingCount());
+          useUIStore.getState().showToast(
+            'Guardado en almacenamiento local (modo offline activo)',
+            'warning',
+            '// SINCRONIZACIÓN PENDIENTE'
+          );
         }
       } else {
         useUIStore.getState().setSyncStatus('pending', getPendingCount());
@@ -391,6 +433,10 @@ export const useTaskStore = create<TaskStore>((set, get) => {
             date: updates.date,
             due_date: updates.dueDate,
             due_time: updates.dueTime,
+            task_type: updates.taskType,
+            start_time: updates.startTime,
+            end_time: updates.endTime,
+            location: updates.location,
             estimated_duration_minutes: updates.estimatedDurationMinutes,
             actual_duration_seconds: updates.actualDurationSeconds,
             status: updates.status,
@@ -413,6 +459,12 @@ export const useTaskStore = create<TaskStore>((set, get) => {
       const activeUserId = useAuthStore.getState().user?.id;
       const { tasksKey, connsKey } = getStorageKeys(activeUserId);
 
+      const taskToRestore = get().tasks.find((t) => t.id === id);
+      const connsToRestore = get().connections.filter(
+        (c) => c.fromTaskId === id || c.toTaskId === id
+      );
+
+      // Optimistically remove from local state immediately
       const updatedTasks = get().tasks.filter((t) => t.id !== id);
       const updatedConns = get().connections.filter(
         (c) => c.fromTaskId !== id && c.toTaskId !== id
@@ -421,22 +473,66 @@ export const useTaskStore = create<TaskStore>((set, get) => {
       await AsyncStorage.setItem(tasksKey, JSON.stringify(updatedTasks));
       await AsyncStorage.setItem(connsKey, JSON.stringify(updatedConns));
 
-      useUIStore.getState().setSyncStatus('syncing');
+      let isCancelled = false;
 
-      try {
-        let token = await authStorage.getAccessToken();
-        if (token && !id.startsWith('task-')) {
-          await api.deleteTask(id);
-          const pending = getPendingCount();
-          useUIStore.getState().setSyncStatus(pending === 0 ? 'synced' : 'pending', pending);
-        } else {
-          const pending = getPendingCount();
-          useUIStore.getState().setSyncStatus(pending === 0 ? 'synced' : 'pending', pending);
+      const deleteTimer = setTimeout(async () => {
+        if (isCancelled) return;
+        useUIStore.getState().setSyncStatus('syncing');
+        try {
+          let token = await authStorage.getAccessToken();
+          if (token && !id.startsWith('task-')) {
+            await api.deleteTask(id);
+            const pending = getPendingCount();
+            useUIStore.getState().setSyncStatus(pending === 0 ? 'synced' : 'pending', pending);
+          } else {
+            const pending = getPendingCount();
+            useUIStore.getState().setSyncStatus(pending === 0 ? 'synced' : 'pending', pending);
+          }
+        } catch (err) {
+          console.warn('Could not delete task in MongoDB:', err);
+          useUIStore.getState().setSyncStatus('pending', getPendingCount());
         }
-      } catch (err) {
-        console.warn('Could not delete task in MongoDB:', err);
-        useUIStore.getState().setSyncStatus('pending', getPendingCount());
-      }
+      }, 7500);
+
+      const handleUndo = async () => {
+        isCancelled = true;
+        clearTimeout(deleteTimer);
+        if (!taskToRestore) return;
+
+        const restoredTasks = [...get().tasks, taskToRestore];
+        const restoredConns = [...get().connections, ...connsToRestore];
+        set({ tasks: restoredTasks, connections: restoredConns });
+
+        const currentKeys = getStorageKeys(useAuthStore.getState().user?.id);
+        await AsyncStorage.setItem(currentKeys.tasksKey, JSON.stringify(restoredTasks));
+        await AsyncStorage.setItem(currentKeys.connsKey, JSON.stringify(restoredConns));
+
+        useUIStore.getState().showToast(
+          `Tarea "${taskToRestore.title}" restaurada al tablero`,
+          'success',
+          '// ACCIÓN REVERTIDA',
+          3500
+        );
+      };
+
+      useUIStore.getState().showToast(
+        taskToRestore ? `Tarea "${taskToRestore.title}" eliminada` : 'Nodo eliminado del sistema',
+        'delete',
+        '// NODO ELIMINADO',
+        7500,
+        {
+          label: 'REVERTIR',
+          onPress: handleUndo,
+        },
+        {
+          backgroundColor: '#050507',
+          borderColor: '#27272a',
+          titleColor: '#ef4444',
+          iconBg: '#18181b',
+          iconColor: '#ef4444',
+          progressColor: '#ef4444',
+        }
+      );
     },
 
     toggleTaskStatus: async (id) => {
@@ -445,6 +541,11 @@ export const useTaskStore = create<TaskStore>((set, get) => {
 
       const nextStatus: TaskStatus = task.status === 'completed' ? 'todo' : 'completed';
       await get().updateTask(id, { status: nextStatus });
+      useUIStore.getState().showToast(
+        nextStatus === 'completed' ? 'Nodo marcado como completado' : 'Nodo reactivado en la secuencia',
+        nextStatus === 'completed' ? 'success' : 'info',
+        nextStatus === 'completed' ? '// NODO COMPLETADO' : '// NODO REACTIVADO'
+      );
     },
 
     createConnection: async (fromTaskId, toTaskId, type = 'flow') => {
@@ -470,6 +571,8 @@ export const useTaskStore = create<TaskStore>((set, get) => {
       const updatedConns = [...get().connections, newConn];
       set({ connections: updatedConns });
       await AsyncStorage.setItem(connsKey, JSON.stringify(updatedConns));
+
+      useUIStore.getState().showToast('Conexión establecida entre los nodos', 'success', '// CIRCUITO ENLAZADO');
 
       useUIStore.getState().setSyncStatus('syncing');
 
@@ -506,6 +609,8 @@ export const useTaskStore = create<TaskStore>((set, get) => {
       const updatedConns = get().connections.filter((c) => c.id !== id);
       set({ connections: updatedConns });
       await AsyncStorage.setItem(connsKey, JSON.stringify(updatedConns));
+
+      useUIStore.getState().showToast('Conexión eliminada de la secuencia', 'info', '// CIRCUITO DESCONECTADO');
 
       useUIStore.getState().setSyncStatus('syncing');
 

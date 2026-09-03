@@ -2,15 +2,20 @@ export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'blocked';
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type ConnectionType = 'dependency' | 'flow' | 'related';
 export type TimerMode = 'stopwatch' | 'pomodoro';
+export type TaskType = 'task' | 'event';
 
 export interface Task {
   id: string;
   title: string;
   description?: string;
   notes?: string; // Markdown notes / scratchpad content
-  date: string; // YYYY-MM-DD (workflow column date)
+  date: string; // YYYY-MM-DD (workflow column date / event date)
   dueDate?: string; // YYYY-MM-DD (optional delivery deadline date)
   dueTime?: string; // HH:MM
+  taskType?: TaskType; // 'task' | 'event'
+  startTime?: string; // HH:MM (for events)
+  endTime?: string; // HH:MM (for events)
+  location?: string; // Venue / location of the event
   estimatedDurationMinutes: number; // e.g. 30, 60, 90, 4608
   actualDurationSeconds: number; // Accumulated from timer sessions
   status: TaskStatus;

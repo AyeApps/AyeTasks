@@ -204,3 +204,19 @@ export function formatTime12h(timeStr?: string): string {
   h = h % 12 || 12;
   return `${h}:${mStr} ${ampm}`;
 }
+
+/**
+ * Calculates the difference in minutes between two valid 24h HH:MM times.
+ * Returns null if times are invalid or end is not after start.
+ */
+export function calculateMinutesBetweenTimes(startTime?: string, endTime?: string): number | null {
+  if (!startTime || !endTime || !isValidTimeHHMM(startTime) || !isValidTimeHHMM(endTime)) {
+    return null;
+  }
+  const [sh, sm] = startTime.split(':').map(Number);
+  const [eh, em] = endTime.split(':').map(Number);
+  const startMins = sh * 60 + sm;
+  const endMins = eh * 60 + em;
+  const diff = endMins - startMins;
+  return diff > 0 ? diff : null;
+}

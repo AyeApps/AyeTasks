@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   StyleSheet,
@@ -10,12 +10,13 @@ import {
   useWindowDimensions,
   Platform,
 } from 'react-native';
-import { X, Link as LinkIcon, Calendar, Check, Ban, Clock, Palette, FileText } from 'lucide-react-native';
+import { X, Link as LinkIcon, Calendar, Check, Ban, Clock, Palette, FileText, MapPin } from 'lucide-react-native';
 import { THEME } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useUIStore } from '../../store/useUIStore';
 import { useTranslation } from '../../store/useLanguageStore';
+import { TaskType } from '../../types';
 import {
   formatDateISO,
   getMondayOfWeek,
@@ -23,6 +24,7 @@ import {
   formatTimeInput,
   isValidTimeHHMM,
   formatTime12h,
+  calculateMinutesBetweenTimes,
 } from '../../utils/dateUtils';
 
 type DurationUnit = 'minutes' | 'hours' | 'days';
@@ -36,6 +38,8 @@ const QUICK_DURATION_PRESETS = [
 ];
 
 const TIME_PRESETS = ['09:00', '12:00', '15:00', '18:00', '21:00'];
+const START_TIME_PRESETS = ['08:00', '09:00', '10:00', '11:00', '14:00', '16:00'];
+const END_TIME_PRESETS = ['09:00', '10:00', '11:00', '12:00', '15:00', '17:00'];
 
 const COLOR_PALETTE = [
   '#00c853', // Emerald
@@ -60,6 +64,7 @@ export const QuickAddTaskModal: React.FC = () => {
   const targetDate = useUIStore((state) => state.quickAddTargetDate);
   const parentTaskId = useUIStore((state) => state.quickAddParentTaskId);
   const closeQuickAdd = useUIStore((state) => state.closeQuickAdd);
+  const setReferenceDate = useUIStore((state) => state.setReferenceDate);
 
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -73,21 +78,30 @@ export const QuickAddTaskModal: React.FC = () => {
   const createTask = useTaskStore((state) => state.createTask);
   const tasks = useTaskStore((state) => state.tasks);
 
+  const [taskType, setTaskType] = useState<TaskType>('task');
   const [title, setTitle] = useState('');
+  const [titleError, setTitleError] = useState(false);
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
   const [dueDate, setDueDate] = useState<string>('');
   const [dueTime, setDueTime] = useState('');
+  const [eventDate, setEventDate] = useState<string>('');
+  const [startTime, setStartTime] = useState('10:00');
+  const [endTime, setEndTime] = useState('11:00');
+  const [location, setLocation] = useState('');
   const [durationValue, setDurationValue] = useState('1');
   const [durationUnit, setDurationUnit] = useState<DurationUnit>('hours');
   const [selectedColor, setSelectedColor] = useState('#00c853');
   const [customHex, setCustomHex] = useState('#00c853');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const titleInputRef = useRef<TextInput | null>(null);
+  const scrollViewRef = useRef<ScrollView | null>(null);
+
   // Compute preset dates for quick selection
   const computedPresets = React.useMemo(() => {
-    if (!targetDate) return [];
-    const base = new Date(targetDate + 'T00:00:00');
+    const baseDateStr = targetDate || formatDateISO(new Date());
+    const base = new Date(baseDateStr + 'T00:00:00');
 
     const tomorrow = new Date(base);
     tomorrow.setDate(base.getDate() + 1);
@@ -97,7 +111,7 @@ export const QuickAddTaskModal: React.FC = () => {
     sunday.setDate(monday.getDate() + 6);
 
     return [
-      { id: 'same', label: t.quickAdd.sameDay, date: targetDate },
+      { id: 'same', label: t.quickAdd.sameDay, date: baseDateStr },
       { id: 'tomorrow', label: t.quickAdd.tomorrow, date: formatDateISO(tomorrow) },
       { id: 'sunday', label: t.quickAdd.endOfWeek, date: formatDateISO(sunday) },
     ];
@@ -105,17 +119,23 @@ export const QuickAddTaskModal: React.FC = () => {
 
   useEffect(() => {
     if (isOpen) {
+      setTaskType('task');
       setTitle('');
+      setTitleError(false);
       setDescription('');
       setNotes('');
       setDueDate('');
       setDueTime('');
+      setEventDate(targetDate || formatDateISO(new Date()));
+      setStartTime('10:00');
+      setEndTime('11:00');
+      setLocation('');
       setDurationValue('1');
       setDurationUnit('hours');
       setSelectedColor('#00c853');
       setCustomHex('#00c853');
     }
-  }, [isOpen]);
+  }, [isOpen, targetDate]);
 
   useEffect(() => {
     if (Platform.OS === 'web' && isOpen && typeof window !== 'undefined') {
@@ -163,25 +183,82 @@ export const QuickAddTaskModal: React.FC = () => {
     setDueTime(formatted);
   };
 
+  const syncDurationFromEventTimes = (start: string, end: string) => {
+    if (isValidTimeHHMM(start) && isValidTimeHHMM(end)) {
+      const diffMins = calculateMinutesBetweenTimes(start, end);
+      if (diffMins && diffMins > 0) {
+        if (diffMins >= 60 && diffMins % 30 === 0) {
+          setDurationValue((diffMins / 60).toFixed(1).replace(/\.0$/, ''));
+          setDurationUnit('hours');
+        } else {
+          setDurationValue(String(diffMins));
+          setDurationUnit('minutes');
+        }
+      }
+    }
+  };
+
+  const handleStartTimeChange = (text: string) => {
+    const formatted = formatTimeInput(text);
+    setStartTime(formatted);
+    syncDurationFromEventTimes(formatted, endTime);
+  };
+
+  const handleEndTimeChange = (text: string) => {
+    const formatted = formatTimeInput(text);
+    setEndTime(formatted);
+    syncDurationFromEventTimes(startTime, formatted);
+  };
+
+  const handleSelectStartTime = (timePreset: string) => {
+    setStartTime(timePreset);
+    syncDurationFromEventTimes(timePreset, endTime);
+  };
+
+  const handleSelectEndTime = (timePreset: string) => {
+    setEndTime(timePreset);
+    syncDurationFromEventTimes(startTime, timePreset);
+  };
+
   const handleSave = async () => {
-    if (!title.trim() || !targetDate) return;
+    if (!title.trim()) {
+      setTitleError(true);
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      setTimeout(() => titleInputRef.current?.focus(), 150);
+      return;
+    }
+    setTitleError(false);
     setIsSubmitting(true);
     try {
+      const scheduledDate = taskType === 'event'
+        ? (eventDate.trim() || targetDate || formatDateISO(new Date()))
+        : (targetDate || formatDateISO(new Date()));
+
       await createTask({
         title: title.trim(),
         description: description.trim() || undefined,
         notes: notes.trim() || undefined,
-        date: targetDate,
-        dueDate: dueDate.trim() || undefined,
-        dueTime: dueTime.trim() || undefined,
+        date: scheduledDate,
+        dueDate: taskType === 'task' ? (dueDate.trim() || undefined) : undefined,
+        dueTime: taskType === 'task' ? (dueTime.trim() || undefined) : undefined,
+        taskType,
+        startTime: taskType === 'event' ? (isValidTimeHHMM(startTime.trim()) ? startTime.trim() : undefined) : undefined,
+        endTime: taskType === 'event' ? (isValidTimeHHMM(endTime.trim()) ? endTime.trim() : undefined) : undefined,
+        location: taskType === 'event' ? (location.trim() || undefined) : undefined,
         estimatedDurationMinutes: estimatedDurationMinutes || 60,
         colorTag: selectedColor,
         parentTaskId: parentTaskId || undefined,
       });
 
+      // Automatically shift board view to the week of the created task/event if different
+      const targetD = new Date(scheduledDate + 'T00:00:00');
+      if (!isNaN(targetD.getTime())) {
+        setReferenceDate(targetD);
+      }
+
       closeQuickAdd();
     } catch (err) {
-      console.error(err);
+      console.error('Failed to create task/event:', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -220,7 +297,7 @@ export const QuickAddTaskModal: React.FC = () => {
             ]}
           >
             <Text style={[styles.techBadgeText, { color: selectedColor }]}>
-              {t.quickAdd.statusDraft}
+              {taskType === 'event' ? t.quickAdd.statusDraftEvent : t.quickAdd.statusDraft}
             </Text>
           </View>
 
@@ -239,14 +316,14 @@ export const QuickAddTaskModal: React.FC = () => {
             <X size={18} color={colors.textPrimary} strokeWidth={2.5} />
           </TouchableOpacity>
 
-          <ScrollView style={styles.techFrameContent} showsVerticalScrollIndicator={false}>
+          <ScrollView ref={scrollViewRef} style={styles.techFrameContent} showsVerticalScrollIndicator={false}>
             {/* Header */}
             <View style={styles.titleSection}>
               <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                 {t.quickAdd.modalSubtitle}
               </Text>
               <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>
-                {t.quickAdd.modalTitle}
+                {taskType === 'event' ? t.quickAdd.modalTitleEvent : t.quickAdd.modalTitle}
               </Text>
             </View>
 
@@ -268,27 +345,103 @@ export const QuickAddTaskModal: React.FC = () => {
               </View>
             ) : null}
 
+            {/* Mode Switcher Segmented Control (TRÁMITE / TAREA vs EVENTO) */}
+            <View style={styles.modeSection}>
+              <Text style={[styles.modeSectionLabel, { color: colors.textSecondary }]}>
+                {t.quickAdd.modeSelectorLabel}
+              </Text>
+              <View style={styles.modeSelectorRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.modeBtn,
+                    taskType === 'task' && styles.modeBtnActive,
+                    {
+                      backgroundColor: taskType === 'task' ? colors.textPrimary : colors.bgSurface,
+                      borderColor: taskType === 'task' ? colors.textPrimary : colors.borderMuted,
+                      shadowColor: colors.shadowColor,
+                    },
+                  ]}
+                  onPress={() => setTaskType('task')}
+                  activeOpacity={0.8}
+                >
+                  <FileText size={15} color={taskType === 'task' ? colors.bgBase : colors.textSecondary} />
+                  <Text
+                    style={[
+                      styles.modeBtnText,
+                      {
+                        color: taskType === 'task' ? colors.bgBase : colors.textSecondary,
+                        fontWeight: taskType === 'task' ? '900' : '700',
+                      },
+                    ]}
+                  >
+                    {t.quickAdd.modeTask}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.modeBtn,
+                    taskType === 'event' && styles.modeBtnActive,
+                    {
+                      backgroundColor: taskType === 'event' ? colors.accent : colors.bgSurface,
+                      borderColor: taskType === 'event' ? colors.accent : colors.borderMuted,
+                      shadowColor: colors.shadowColor,
+                    },
+                  ]}
+                  onPress={() => setTaskType('event')}
+                  activeOpacity={0.8}
+                >
+                  <Calendar size={15} color={taskType === 'event' ? colors.textInvert : colors.textSecondary} />
+                  <Text
+                    style={[
+                      styles.modeBtnText,
+                      {
+                        color: taskType === 'event' ? colors.textInvert : colors.textSecondary,
+                        fontWeight: taskType === 'event' ? '900' : '700',
+                      },
+                    ]}
+                  >
+                    {t.quickAdd.modeEvent}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             {/* Form Title */}
             <View style={styles.formGroup}>
-              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t.quickAdd.titleLabel}</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <Text style={[styles.inputLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
+                  {taskType === 'event' ? t.quickAdd.titleLabelEvent : t.quickAdd.titleLabel} <Text style={{ color: colors.accentAlert || '#ff4444' }}>*</Text>
+                </Text>
+                {titleError ? (
+                  <Text style={{ fontSize: 10, color: colors.accentAlert || '#ff4444', fontFamily: THEME.fonts.mono, fontWeight: '800' }}>
+                    [ CAMPO REQUERIDO ]
+                  </Text>
+                ) : null}
+              </View>
               <TextInput
+                ref={titleInputRef}
                 style={[
                   styles.geometricInput,
                   {
                     backgroundColor: colors.bgSurface,
-                    borderColor: colors.borderColor,
+                    borderColor: titleError ? (colors.accentAlert || '#ff4444') : colors.borderColor,
+                    borderWidth: titleError ? 2 : 1,
                     color: colors.textPrimary,
                   },
                 ]}
-                placeholder={t.quickAdd.titlePlaceholder}
+                placeholder={taskType === 'event' ? t.quickAdd.titlePlaceholderEvent : t.quickAdd.titlePlaceholder}
                 placeholderTextColor={colors.textMuted}
                 value={title}
-                onChangeText={setTitle}
+                onChangeText={(text) => {
+                  setTitle(text);
+                  if (titleError && text.trim()) setTitleError(false);
+                }}
                 autoFocus
               />
             </View>
 
-            {/* Form Description */}
+            {/* Form Description (Shared) */}
             <View style={styles.formGroup}>
               <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{t.quickAdd.descLabel}</Text>
               <TextInput
@@ -310,7 +463,7 @@ export const QuickAddTaskModal: React.FC = () => {
               />
             </View>
 
-            {/* Dedicated Notes / Scratchpad Input */}
+            {/* Dedicated Notes / Scratchpad Input (Shared) */}
             <View style={styles.formGroup}>
               <View style={styles.labelWithIcon}>
                 <FileText size={13} color={colors.accent} />
@@ -338,74 +491,268 @@ export const QuickAddTaskModal: React.FC = () => {
               />
             </View>
 
-            {/* Delivery Deadline & Due Time Section */}
-            <View style={styles.formGroup}>
-              <View style={styles.labelWithIcon}>
-                <Calendar size={13} color={colors.accent} />
-                <Text style={[styles.inputLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
-                  {t.quickAdd.deadlineSectionLabel}
-                </Text>
-              </View>
-
-              {/* Date and Time Inputs Side-by-Side */}
-              <View style={[styles.deadlineInputsRow, isMobile && styles.deadlineInputsRowMobile]}>
-                {/* Date Input Column */}
-                <View style={{ flex: 1.2 }}>
-                  <Text style={[styles.inputSubLabel, { color: colors.textSecondary }]}>
-                    {t.quickAdd.dueDateLabel}
+            {/* Mode 1: Delivery Deadline & Due Time Section (Task Mode) */}
+            {taskType === 'task' ? (
+              <View style={styles.formGroup}>
+                <View style={styles.labelWithIcon}>
+                  <Calendar size={13} color={colors.accent} />
+                  <Text style={[styles.inputLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
+                    {t.quickAdd.deadlineSectionLabel}
                   </Text>
-                  <TextInput
-                    style={[
-                      styles.geometricInput,
-                      {
-                        backgroundColor: colors.bgSurface,
-                        borderColor: colors.borderColor,
-                        color: colors.textPrimary,
-                        minHeight: 44,
-                      },
-                    ]}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor={colors.textMuted}
-                    value={dueDate}
-                    onChangeText={setDueDate}
-                    maxLength={10}
-                  />
+                </View>
 
-                  {/* Date Presets Row directly under Due Date input */}
-                  <View style={styles.presetsRowFlex}>
-                    <TouchableOpacity
+                {/* Date and Time Inputs Side-by-Side */}
+                <View style={[styles.deadlineInputsRow, isMobile && styles.deadlineInputsRowMobile]}>
+                  {/* Date Input Column */}
+                  <View style={{ flex: 1.2 }}>
+                    <Text style={[styles.inputSubLabel, { color: colors.textSecondary }]}>
+                      {t.quickAdd.dueDateLabel}
+                    </Text>
+                    <TextInput
                       style={[
-                        styles.chip,
+                        styles.geometricInput,
                         {
-                          flex: 0.85,
-                          borderColor: dueDate === '' ? colors.borderMuted : colors.borderMuted,
-                          backgroundColor: dueDate === '' ? colors.textPrimary : colors.bgSurface,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          paddingHorizontal: 0,
+                          backgroundColor: colors.bgSurface,
+                          borderColor: colors.borderColor,
+                          color: colors.textPrimary,
+                          minHeight: 44,
                         },
                       ]}
-                      onPress={() => {
-                        setDueDate('');
-                        setDueTime('');
-                      }}
-                      activeOpacity={0.7}
-                    >
-                      <Text
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor={colors.textMuted}
+                      value={dueDate}
+                      onChangeText={setDueDate}
+                      maxLength={10}
+                    />
+
+                    {/* Date Presets Row directly under Due Date input */}
+                    <View style={styles.presetsRowFlex}>
+                      <TouchableOpacity
                         style={[
-                          styles.chipText,
+                          styles.chip,
                           {
-                            color: dueDate === '' ? colors.bgBase : colors.textSecondary,
-                            fontWeight: dueDate === '' ? '900' : '700',
+                            flex: 0.85,
+                            borderColor: dueDate === '' ? colors.borderMuted : colors.borderMuted,
+                            backgroundColor: dueDate === '' ? colors.textPrimary : colors.bgSurface,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            paddingHorizontal: 0,
                           },
                         ]}
+                        onPress={() => {
+                          setDueDate('');
+                          setDueTime('');
+                        }}
+                        activeOpacity={0.7}
                       >
-                        {t.quickAdd.noneDate}
-                      </Text>
-                    </TouchableOpacity>
+                        <Text
+                          style={[
+                            styles.chipText,
+                            {
+                              color: dueDate === '' ? colors.bgBase : colors.textSecondary,
+                              fontWeight: dueDate === '' ? '900' : '700',
+                            },
+                          ]}
+                        >
+                          {t.quickAdd.noneDate}
+                        </Text>
+                      </TouchableOpacity>
 
+                      {computedPresets.map((p) => {
+                        const isSelected = dueDate === p.date;
+                        return (
+                          <TouchableOpacity
+                            key={p.id}
+                            style={[
+                              styles.chip,
+                              {
+                                flex: 1,
+                                borderColor: isSelected ? colors.accent : colors.borderMuted,
+                                backgroundColor: isSelected ? colors.accentSubtle : colors.bgSurface,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                paddingHorizontal: 0,
+                              },
+                            ]}
+                            onPress={() => setDueDate(p.date)}
+                            activeOpacity={0.7}
+                          >
+                            <Text
+                              style={[
+                                styles.chipText,
+                                {
+                                  color: isSelected ? colors.accent : colors.textSecondary,
+                                  fontWeight: isSelected ? '900' : '700',
+                                },
+                              ]}
+                            >
+                              {p.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+
+                  {/* Due Time Input */}
+                  <View style={{ flex: 1, marginLeft: isMobile ? 0 : 12, marginTop: isMobile ? 8 : 0 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={[styles.inputSubLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
+                        {t.quickAdd.dueTimeLabel}
+                      </Text>
+                      {isValidTimeHHMM(dueTime) ? (
+                        <Text style={{ fontSize: 10, fontFamily: THEME.fonts.mono, color: colors.accent, fontWeight: '800' }}>
+                          ✓ {formatTime12h(dueTime)}
+                        </Text>
+                      ) : dueTime ? (
+                        <Text style={{ fontSize: 10, fontFamily: THEME.fonts.mono, color: colors.accentWarning, fontWeight: '800' }}>
+                          {t.quickAdd.timeFormatHelper}
+                        </Text>
+                      ) : null}
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <TextInput
+                        style={[
+                          styles.geometricInput,
+                          {
+                            backgroundColor: colors.bgSurface,
+                            borderColor: isValidTimeHHMM(dueTime)
+                              ? colors.accent
+                              : dueTime
+                              ? colors.accentWarning
+                              : colors.borderColor,
+                            color: colors.textPrimary,
+                            minHeight: 44,
+                            flex: 1,
+                            fontFamily: THEME.fonts.mono,
+                            letterSpacing: 1,
+                          },
+                        ]}
+                        placeholder="18:30"
+                        placeholderTextColor={colors.textMuted}
+                        value={dueTime}
+                        onChangeText={handleDueTimeChange}
+                        maxLength={5}
+                        keyboardType="numbers-and-punctuation"
+                      />
+
+                      {Platform.OS === 'web' ? (
+                        <View style={{ height: 44, justifyContent: 'center' }}>
+                          <input
+                            type="time"
+                            value={isValidTimeHHMM(dueTime) ? dueTime : ''}
+                            onChange={(e) => setDueTime(e.target.value)}
+                            style={{
+                              height: 44,
+                              padding: '0 8px',
+                              background: colors.bgSurface,
+                              border: `2px solid ${colors.borderColor}`,
+                              color: colors.textPrimary,
+                              cursor: 'pointer',
+                              fontFamily: 'monospace',
+                              fontSize: '12px',
+                            }}
+                          />
+                        </View>
+                      ) : null}
+                    </View>
+
+                    {/* Time Presets Row directly under Due Time input */}
+                    <View style={styles.presetsRowFlex}>
+                      {TIME_PRESETS.map((tPreset) => {
+                        const isSelected = dueTime === tPreset;
+                        return (
+                          <TouchableOpacity
+                            key={tPreset}
+                            style={[
+                              styles.timePresetChip,
+                              {
+                                flex: 1,
+                                backgroundColor: isSelected ? colors.accent : colors.bgSurface,
+                                borderColor: isSelected ? colors.accent : colors.borderMuted,
+                                paddingHorizontal: 0,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              },
+                            ]}
+                            onPress={() => setDueTime(tPreset)}
+                            activeOpacity={0.7}
+                          >
+                            <Text
+                              style={[
+                                styles.timePresetText,
+                                { color: isSelected ? colors.textInvert : colors.textSecondary },
+                              ]}
+                            >
+                              {tPreset}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ) : (
+              /* Mode 2: Event Specification Section (Event Mode) */
+              <View style={styles.formGroup}>
+                <View style={styles.labelWithIcon}>
+                  <Calendar size={13} color={colors.accent} />
+                  <Text style={[styles.inputLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
+                    {t.quickAdd.eventSectionLabel}
+                  </Text>
+                </View>
+
+                {/* Event Date Row */}
+                <View style={{ marginBottom: 12 }}>
+                  <Text style={[styles.inputSubLabel, { color: colors.textSecondary }]}>
+                    {t.quickAdd.eventDateLabel}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <TextInput
+                      style={[
+                        styles.geometricInput,
+                        {
+                          backgroundColor: colors.bgSurface,
+                          borderColor: colors.borderColor,
+                          color: colors.textPrimary,
+                          minHeight: 44,
+                          flex: 1,
+                        },
+                      ]}
+                      placeholder="YYYY-MM-DD"
+                      placeholderTextColor={colors.textMuted}
+                      value={eventDate}
+                      onChangeText={setEventDate}
+                      maxLength={10}
+                    />
+
+                    {Platform.OS === 'web' ? (
+                      <View style={{ height: 44, justifyContent: 'center' }}>
+                        <input
+                          type="date"
+                          value={eventDate}
+                          onChange={(e) => setEventDate(e.target.value)}
+                          style={{
+                            height: 44,
+                            padding: '0 8px',
+                            background: colors.bgSurface,
+                            border: `2px solid ${colors.borderColor}`,
+                            color: colors.textPrimary,
+                            cursor: 'pointer',
+                            fontFamily: 'monospace',
+                            fontSize: '12px',
+                          }}
+                        />
+                      </View>
+                    ) : null}
+                  </View>
+
+                  {/* Event Date Presets Row */}
+                  <View style={styles.presetsRowFlex}>
                     {computedPresets.map((p) => {
-                      const isSelected = dueDate === p.date;
+                      const isSelected = eventDate === p.date;
                       return (
                         <TouchableOpacity
                           key={p.id}
@@ -420,7 +767,7 @@ export const QuickAddTaskModal: React.FC = () => {
                               paddingHorizontal: 0,
                             },
                           ]}
-                          onPress={() => setDueDate(p.date)}
+                          onPress={() => setEventDate(p.date)}
                           activeOpacity={0.7}
                         >
                           <Text
@@ -440,106 +787,217 @@ export const QuickAddTaskModal: React.FC = () => {
                   </View>
                 </View>
 
-                {/* Due Time Input */}
-                <View style={{ flex: 1, marginLeft: isMobile ? 0 : 12, marginTop: isMobile ? 8 : 0 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <Text style={[styles.inputSubLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
-                      {t.quickAdd.dueTimeLabel}
-                    </Text>
-                    {isValidTimeHHMM(dueTime) ? (
-                      <Text style={{ fontSize: 10, fontFamily: THEME.fonts.mono, color: colors.accent, fontWeight: '800' }}>
-                        ✓ {formatTime12h(dueTime)}
+                {/* Start and End Times Row */}
+                <View style={[styles.deadlineInputsRow, isMobile && styles.deadlineInputsRowMobile, { marginBottom: 12 }]}>
+                  {/* Start Time Column */}
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={[styles.inputSubLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
+                        {t.quickAdd.eventStartTimeLabel}
                       </Text>
-                    ) : dueTime ? (
-                      <Text style={{ fontSize: 10, fontFamily: THEME.fonts.mono, color: colors.accentWarning, fontWeight: '800' }}>
-                        {t.quickAdd.timeFormatHelper}
-                      </Text>
-                    ) : null}
-                  </View>
+                      {isValidTimeHHMM(startTime) ? (
+                        <Text style={{ fontSize: 10, fontFamily: THEME.fonts.mono, color: colors.accent, fontWeight: '800' }}>
+                          ✓ {formatTime12h(startTime)}
+                        </Text>
+                      ) : null}
+                    </View>
 
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <TextInput
-                      style={[
-                        styles.geometricInput,
-                        {
-                          backgroundColor: colors.bgSurface,
-                          borderColor: isValidTimeHHMM(dueTime)
-                            ? colors.accent
-                            : dueTime
-                            ? colors.accentWarning
-                            : colors.borderColor,
-                          color: colors.textPrimary,
-                          minHeight: 44,
-                          flex: 1,
-                          fontFamily: THEME.fonts.mono,
-                          letterSpacing: 1,
-                        },
-                      ]}
-                      placeholder="18:30"
-                      placeholderTextColor={colors.textMuted}
-                      value={dueTime}
-                      onChangeText={handleDueTimeChange}
-                      maxLength={5}
-                      keyboardType="numbers-and-punctuation"
-                    />
-
-                    {Platform.OS === 'web' ? (
-                      <View style={{ height: 44, justifyContent: 'center' }}>
-                        <input
-                          type="time"
-                          value={isValidTimeHHMM(dueTime) ? dueTime : ''}
-                          onChange={(e) => setDueTime(e.target.value)}
-                          style={{
-                            height: 44,
-                            padding: '0 8px',
-                            background: colors.bgSurface,
-                            border: `2px solid ${colors.borderColor}`,
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <TextInput
+                        style={[
+                          styles.geometricInput,
+                          {
+                            backgroundColor: colors.bgSurface,
+                            borderColor: isValidTimeHHMM(startTime) ? colors.accent : colors.borderColor,
                             color: colors.textPrimary,
-                            cursor: 'pointer',
-                            fontFamily: 'monospace',
-                            fontSize: '12px',
-                          }}
-                        />
-                      </View>
-                    ) : null}
+                            minHeight: 44,
+                            flex: 1,
+                            fontFamily: THEME.fonts.mono,
+                            letterSpacing: 1,
+                          },
+                        ]}
+                        placeholder="10:00"
+                        placeholderTextColor={colors.textMuted}
+                        value={startTime}
+                        onChangeText={handleStartTimeChange}
+                        maxLength={5}
+                        keyboardType="numbers-and-punctuation"
+                      />
+
+                      {Platform.OS === 'web' ? (
+                        <View style={{ height: 44, justifyContent: 'center' }}>
+                          <input
+                            type="time"
+                            value={isValidTimeHHMM(startTime) ? startTime : ''}
+                            onChange={(e) => handleStartTimeChange(e.target.value)}
+                            style={{
+                              height: 44,
+                              padding: '0 8px',
+                              background: colors.bgSurface,
+                              border: `2px solid ${colors.borderColor}`,
+                              color: colors.textPrimary,
+                              cursor: 'pointer',
+                              fontFamily: 'monospace',
+                              fontSize: '12px',
+                            }}
+                          />
+                        </View>
+                      ) : null}
+                    </View>
+
+                    {/* Start Time Presets */}
+                    <View style={styles.presetsRowFlex}>
+                      {START_TIME_PRESETS.slice(0, 4).map((tPreset) => {
+                        const isSelected = startTime === tPreset;
+                        return (
+                          <TouchableOpacity
+                            key={tPreset}
+                            style={[
+                              styles.timePresetChip,
+                              {
+                                flex: 1,
+                                backgroundColor: isSelected ? colors.accent : colors.bgSurface,
+                                borderColor: isSelected ? colors.accent : colors.borderMuted,
+                                paddingHorizontal: 0,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              },
+                            ]}
+                            onPress={() => handleSelectStartTime(tPreset)}
+                            activeOpacity={0.7}
+                          >
+                            <Text
+                              style={[
+                                styles.timePresetText,
+                                { color: isSelected ? colors.textInvert : colors.textSecondary },
+                              ]}
+                            >
+                              {tPreset}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
                   </View>
 
-                  {/* Time Presets Row directly under Due Time input */}
-                  <View style={styles.presetsRowFlex}>
-                    {TIME_PRESETS.map((tPreset) => {
-                      const isSelected = dueTime === tPreset;
-                      return (
-                        <TouchableOpacity
-                          key={tPreset}
-                          style={[
-                            styles.timePresetChip,
-                            {
-                              flex: 1,
-                              backgroundColor: isSelected ? colors.accent : colors.bgSurface,
-                              borderColor: isSelected ? colors.accent : colors.borderMuted,
-                              paddingHorizontal: 0,
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            },
-                          ]}
-                          onPress={() => setDueTime(tPreset)}
-                          activeOpacity={0.7}
-                        >
-                          <Text
+                  {/* End Time Column */}
+                  <View style={{ flex: 1, marginLeft: isMobile ? 0 : 12, marginTop: isMobile ? 8 : 0 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={[styles.inputSubLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
+                        {t.quickAdd.eventEndTimeLabel}
+                      </Text>
+                      {isValidTimeHHMM(endTime) ? (
+                        <Text style={{ fontSize: 10, fontFamily: THEME.fonts.mono, color: colors.accent, fontWeight: '800' }}>
+                          ✓ {formatTime12h(endTime)}
+                        </Text>
+                      ) : null}
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <TextInput
+                        style={[
+                          styles.geometricInput,
+                          {
+                            backgroundColor: colors.bgSurface,
+                            borderColor: isValidTimeHHMM(endTime) ? colors.accent : colors.borderColor,
+                            color: colors.textPrimary,
+                            minHeight: 44,
+                            flex: 1,
+                            fontFamily: THEME.fonts.mono,
+                            letterSpacing: 1,
+                          },
+                        ]}
+                        placeholder="11:30"
+                        placeholderTextColor={colors.textMuted}
+                        value={endTime}
+                        onChangeText={handleEndTimeChange}
+                        maxLength={5}
+                        keyboardType="numbers-and-punctuation"
+                      />
+
+                      {Platform.OS === 'web' ? (
+                        <View style={{ height: 44, justifyContent: 'center' }}>
+                          <input
+                            type="time"
+                            value={isValidTimeHHMM(endTime) ? endTime : ''}
+                            onChange={(e) => handleEndTimeChange(e.target.value)}
+                            style={{
+                              height: 44,
+                              padding: '0 8px',
+                              background: colors.bgSurface,
+                              border: `2px solid ${colors.borderColor}`,
+                              color: colors.textPrimary,
+                              cursor: 'pointer',
+                              fontFamily: 'monospace',
+                              fontSize: '12px',
+                            }}
+                          />
+                        </View>
+                      ) : null}
+                    </View>
+
+                    {/* End Time Presets */}
+                    <View style={styles.presetsRowFlex}>
+                      {END_TIME_PRESETS.slice(0, 4).map((tPreset) => {
+                        const isSelected = endTime === tPreset;
+                        return (
+                          <TouchableOpacity
+                            key={tPreset}
                             style={[
-                              styles.timePresetText,
-                              { color: isSelected ? colors.textInvert : colors.textSecondary },
+                              styles.timePresetChip,
+                              {
+                                flex: 1,
+                                backgroundColor: isSelected ? colors.accent : colors.bgSurface,
+                                borderColor: isSelected ? colors.accent : colors.borderMuted,
+                                paddingHorizontal: 0,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              },
                             ]}
+                            onPress={() => handleSelectEndTime(tPreset)}
+                            activeOpacity={0.7}
                           >
-                            {tPreset}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
+                            <Text
+                              style={[
+                                styles.timePresetText,
+                                { color: isSelected ? colors.textInvert : colors.textSecondary },
+                              ]}
+                            >
+                              {tPreset}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
                   </View>
                 </View>
+
+                {/* Location Input */}
+                <View style={{ marginTop: 4 }}>
+                  <View style={styles.labelWithIcon}>
+                    <MapPin size={13} color={colors.accent} />
+                    <Text style={[styles.inputSubLabel, { color: colors.textSecondary, marginBottom: 0 }]}>
+                      {t.quickAdd.locationLabel}
+                    </Text>
+                  </View>
+                  <TextInput
+                    style={[
+                      styles.geometricInput,
+                      {
+                        backgroundColor: colors.bgSurface,
+                        borderColor: colors.borderColor,
+                        color: colors.textPrimary,
+                        minHeight: 44,
+                      },
+                    ]}
+                    placeholder={t.quickAdd.locationPlaceholder}
+                    placeholderTextColor={colors.textMuted}
+                    value={location}
+                    onChangeText={setLocation}
+                  />
+                </View>
               </View>
-            </View>
+            )}
 
             {/* Estimated Duration Section */}
             <View style={styles.formGroup}>
@@ -550,9 +1008,26 @@ export const QuickAddTaskModal: React.FC = () => {
                     {t.quickAdd.estDurationLabel}
                   </Text>
                 </View>
-                <Text style={[styles.durationPreviewText, { color: colors.accent }]}>
-                  [ {formatEstimatedDuration(estimatedDurationMinutes)} // {estimatedDurationMinutes}M ]
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  {taskType === 'event' && calculateMinutesBetweenTimes(startTime, endTime) ? (
+                    <View
+                      style={{
+                        backgroundColor: colors.accentSubtle,
+                        borderColor: colors.accent,
+                        borderWidth: 1,
+                        paddingHorizontal: 6,
+                        paddingVertical: 1,
+                      }}
+                    >
+                      <Text style={{ fontSize: 9, fontFamily: THEME.fonts.mono, color: colors.accent, fontWeight: '900' }}>
+                        AUTO
+                      </Text>
+                    </View>
+                  ) : null}
+                  <Text style={[styles.durationPreviewText, { color: colors.accent }]}>
+                    [ {formatEstimatedDuration(estimatedDurationMinutes)} // {estimatedDurationMinutes}M ]
+                  </Text>
+                </View>
               </View>
 
               {/* Input + Unit Selector Group */}
@@ -754,7 +1229,13 @@ export const QuickAddTaskModal: React.FC = () => {
                 activeOpacity={0.8}
               >
                 <Text style={[styles.submitText, { color: colors.textInvert }]}>
-                  {isSubmitting ? t.quickAdd.creatingBtn : t.quickAdd.createBtn}
+                  {taskType === 'event'
+                    ? isSubmitting
+                      ? t.quickAdd.creatingEventBtn
+                      : t.quickAdd.createEventBtn
+                    : isSubmitting
+                    ? t.quickAdd.creatingBtn
+                    : t.quickAdd.createBtn}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -853,6 +1334,42 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontFamily: THEME.fonts.mono,
     flex: 1,
+  },
+  modeSection: {
+    marginBottom: 16,
+  },
+  modeSectionLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+    fontFamily: THEME.fonts.mono,
+    marginBottom: 8,
+  },
+  modeSelectorRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+  },
+  modeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 48,
+    borderWidth: THEME.borders.thick,
+    paddingHorizontal: 12,
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+  },
+  modeBtnActive: {
+    shadowOffset: { width: 4, height: 4 },
+  },
+  modeBtnText: {
+    fontSize: 11,
+    letterSpacing: 1,
+    fontFamily: THEME.fonts.mono,
   },
   formGroup: {
     marginBottom: 14,

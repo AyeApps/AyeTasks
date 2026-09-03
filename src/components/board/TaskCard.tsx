@@ -19,6 +19,8 @@ import {
   Flame,
   Activity,
   FileText,
+  Calendar,
+  MapPin,
 } from 'lucide-react-native';
 import { THEME } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
@@ -617,7 +619,62 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 </View>
               ) : null}
 
-              {task.dueTime && !deadlineInfo ? (
+              {task.taskType === 'event' ? (
+                <View
+                  style={[
+                    styles.techChipDesktop,
+                    {
+                      borderColor: colors.accent,
+                      backgroundColor: colors.accentSubtle,
+                    },
+                  ]}
+                >
+                  <Calendar size={10} color={colors.accent} />
+                  <Text style={[styles.techChipLoggedText, { color: colors.accent }]}>
+                    {t.taskCard.event}
+                  </Text>
+                </View>
+              ) : null}
+
+              {task.taskType === 'event' && (task.startTime || task.endTime) ? (
+                <View
+                  style={[
+                    styles.techChipDesktop,
+                    {
+                      borderColor: colors.accentWarning,
+                      backgroundColor: 'rgba(255, 171, 0, 0.12)',
+                    },
+                  ]}
+                >
+                  <Clock size={10} color={colors.accentWarning} />
+                  <Text style={[styles.techChipText, { color: colors.accentWarning, fontWeight: '800' }]}>
+                    {task.startTime || '??:??'}{task.endTime ? ` - ${task.endTime}` : ''}
+                  </Text>
+                </View>
+              ) : null}
+
+              {task.taskType === 'event' && task.location ? (
+                <View
+                  style={[
+                    styles.techChipDesktop,
+                    {
+                      borderColor: colors.borderMuted,
+                      backgroundColor: colors.bgSurface,
+                      maxWidth: 160,
+                    },
+                  ]}
+                >
+                  <MapPin size={10} color={colors.textSecondary} />
+                  <Text
+                    style={[styles.techChipText, { color: colors.textSecondary }]}
+                    numberOfLines={1}
+                  >
+                    {task.location}
+                  </Text>
+                </View>
+              ) : null}
+
+              {task.taskType !== 'event' && task.dueTime && !deadlineInfo ? (
                 <View
                   style={[
                     styles.techChipDesktop,

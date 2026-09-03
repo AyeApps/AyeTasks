@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   View,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import {
   ChevronLeft,
@@ -123,6 +124,18 @@ export const WeekHeader: React.FC = () => {
   const weekDays = React.useMemo(
     () => getWeekDays(currentReferenceDate, language),
     [currentReferenceDate, language]
+  );
+
+  const nextWeekDays = React.useMemo(() => {
+    const nextDate = new Date(currentReferenceDate);
+    nextDate.setDate(nextDate.getDate() + 7);
+    return getWeekDays(nextDate, language);
+  }, [currentReferenceDate, language]);
+
+  const nextWeekMondayStr = nextWeekDays[0]?.dateString;
+  const nextWeekSundayStr = nextWeekDays[6]?.dateString;
+  const nextWeekTasks = tasks.filter(
+    (t) => t.date >= nextWeekMondayStr && t.date <= nextWeekSundayStr
   );
 
   // Telemetry stats for this week
@@ -255,11 +268,9 @@ export const WeekHeader: React.FC = () => {
                 },
               ]}
               onPress={() => {
-                if (syncStatus === 'pending' || syncStatus === 'offline') {
-                  syncPendingMutations();
-                }
+                syncPendingMutations();
               }}
-              activeOpacity={syncStatus === 'pending' || syncStatus === 'offline' ? 0.7 : 1}
+              activeOpacity={0.7}
             >
               <View
                 style={[
@@ -595,66 +606,71 @@ export const WeekHeader: React.FC = () => {
         {/* Right: 7-Day Quick Overview & Telemetry Meter (Desktop & Tablet) */}
         {!isTablet ? (
           <View style={styles.weekOverviewTracker}>
-            {/* 7 Daily Mini Chips */}
-            <View style={styles.miniDaysRow}>
-              {weekDays.map((d) => {
-                const dayTasks = tasks.filter((t) => t.date === d.dateString);
-                const isAllDone =
-                  dayTasks.length > 0 && dayTasks.every((t) => t.status === 'completed');
-                const hasPending =
-                  dayTasks.length > 0 && dayTasks.some((t) => t.status !== 'completed');
+            {/* 7 Daily Mini Chips for NEXT WEEK (+7D PREVIEW) */}
+            <View style={styles.nextWeekContainer}>
+              <View style={styles.nextWeekHeaderRow}>
+                <Text style={[styles.nextWeekLabel, { color: colors.accent }]}>
+                  {language === 'es' ? '+1 SEMANA' : '+1 WEEK'}
+                </Text>
+                <Text style={[styles.nextWeekCountBadge, { color: colors.textMuted }]}>
+                  {nextWeekTasks.length} {language === 'es' ? 'nodos' : 'nodes'}
+                </Text>
+              </View>
 
-                return (
-                  <TouchableOpacity
-                    key={d.dateString}
-                    style={[
-                      styles.miniDayChip,
-                      {
-                        borderColor: d.isToday ? colors.accent : colors.borderMuted,
-                        backgroundColor: d.isToday
-                          ? colors.accentSubtle
-                          : colors.bgBase,
-                      },
-                    ]}
-                    onPress={() => setReferenceDate(new Date(d.dateString + 'T00:00:00'))}
-                    activeOpacity={0.7}
-                  >
-                    <Text
+              <View style={styles.miniDaysRow}>
+                {nextWeekDays.map((d) => {
+                  const dayTasks = tasks.filter((t) => t.date === d.dateString);
+                  const count = dayTasks.length;
+                  const hasTasks = count > 0;
+
+                  return (
+                    <TouchableOpacity
+                      key={d.dateString}
                       style={[
-                        styles.miniDayText,
+                        styles.miniDayChip,
                         {
-                          color: d.isToday ? colors.accent : colors.textSecondary,
-                          fontWeight: d.isToday ? '900' : '700',
+                          borderColor: hasTasks ? colors.accent : colors.borderMuted,
+                          backgroundColor: hasTasks
+                            ? (colors.accentSubtle || 'rgba(254, 157, 1, 0.08)')
+                            : colors.bgBase,
                         },
                       ]}
+                      onPress={() => setReferenceDate(new Date(d.dateString + 'T00:00:00'))}
+                      activeOpacity={0.7}
+                      {...(Platform.OS === 'web'
+                        ? {
+                            title: `${d.name} (${d.dateString}): ${count} tareas para la próxima semana. Haz clic para navegar.`,
+                          }
+                        : {})}
                     >
-                      {d.name.slice(0, 1)}
-                    </Text>
-                    {isAllDone ? (
-                      <View
+                      <Text
                         style={[
-                          styles.miniDot,
-                          { backgroundColor: colors.accent },
+                          styles.miniDayText,
+                          {
+                            color: hasTasks ? colors.accent : colors.textSecondary,
+                            fontWeight: hasTasks ? '900' : '700',
+                          },
                         ]}
-                      />
-                    ) : hasPending ? (
-                      <View
+                      >
+                        {d.name.slice(0, 1)}
+                      </Text>
+
+                      <Text
                         style={[
-                          styles.miniDot,
-                          { backgroundColor: colors.accentWarning },
+                          styles.miniDayCountText,
+                          {
+                            color: hasTasks ? colors.accent : colors.textMuted,
+                            fontWeight: hasTasks ? '900' : '700',
+                            opacity: hasTasks ? 1 : 0.45,
+                          },
                         ]}
-                      />
-                    ) : (
-                      <View
-                        style={[
-                          styles.miniDotEmpty,
-                          { borderColor: colors.borderMuted },
-                        ]}
-                      />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
+                      >
+                        {count}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
 
             {/* Weekly Completion Telemetry Meter */}
@@ -1072,6 +1088,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 14,
   },
+  nextWeekContainer: {
+    flexDirection: 'column',
+    gap: 4,
+    alignItems: 'flex-start',
+  },
+  nextWeekHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 2,
+  },
+  nextWeekLabel: {
+    fontSize: 9,
+    fontFamily: THEME.fonts.mono,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+  },
+  nextWeekCountBadge: {
+    fontSize: 9,
+    fontFamily: THEME.fonts.mono,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
   miniDaysRow: {
     flexDirection: 'row',
     gap: 5,
@@ -1088,16 +1128,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: THEME.fonts.mono,
   },
-  miniDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  miniDotEmpty: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    borderWidth: 1,
+  miniDayCountText: {
+    fontSize: 10,
+    fontFamily: THEME.fonts.mono,
+    letterSpacing: 0.2,
   },
   weeklyTelemetryCard: {
     borderWidth: THEME.borders.thick,

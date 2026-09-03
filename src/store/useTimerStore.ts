@@ -157,6 +157,13 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
 
     // 4. Mark focused / active task as in_progress
     useTaskStore.getState().updateTask(taskId, { status: 'in_progress' });
+    useUIStore.getState().showToast(
+      uiMode === 'focus_bar'
+        ? `Modo Deep Focus activo para "${newTimer.taskTitle}"`
+        : `Temporizador en segundo plano iniciado para "${newTimer.taskTitle}"`,
+      'success',
+      uiMode === 'focus_bar' ? '// DEEP FOCUS ACTIVO' : '// TEMPORIZADOR ACTIVO'
+    );
 
     // 5. Sync to backend API
     try {
@@ -209,6 +216,12 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
     } catch (err) {
       console.warn('Could not sync timer stop to backend:', err);
     }
+
+    useUIStore.getState().showToast(
+      `Sesión registrada: ${Math.floor(finalTotal / 60)}m ${finalTotal % 60}s acumulados`,
+      'info',
+      '// REGISTRO DE TIEMPO'
+    );
   },
 
   completeTaskAndStop: async (taskId) => {

@@ -14,7 +14,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useUIStore } from '../../store/useUIStore';
 import { CanvasProvider, useCanvasContext } from '../../context/CanvasContext';
-import { getWeekDays } from '../../utils/dateUtils';
+import { getWeekDays, getMondayOfWeek, formatDateISO } from '../../utils/dateUtils';
 import { useLanguageStore } from '../../store/useLanguageStore';
 import { ConnectingBanner } from '../board/ConnectingBanner';
 import { DayColumn } from '../board/DayColumn';
@@ -50,13 +50,18 @@ const WeekCanvasInner: React.FC = () => {
   const activeDay = weekDays[selectedMobileDayIndex] || weekDays[0];
 
   const monday = weekDays[0]?.dateString;
-  const sunday = weekDays[6]?.dateString;
+  const nextSunday = React.useMemo(() => {
+    if (!currentReferenceDate) return undefined;
+    const mon = getMondayOfWeek(currentReferenceDate);
+    mon.setDate(mon.getDate() + 13);
+    return formatDateISO(mon);
+  }, [currentReferenceDate]);
 
   useEffect(() => {
-    if (monday && sunday) {
-      loadTasksAndConnections(monday, sunday);
+    if (monday) {
+      loadTasksAndConnections(monday, nextSunday);
     }
-  }, [monday, sunday, loadTasksAndConnections]);
+  }, [monday, nextSunday, loadTasksAndConnections]);
 
   const mobileColumnWidth = isMobile ? Math.min(windowWidth - 24, 600) : 280;
 

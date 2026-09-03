@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { api } from '../services/api';
 import { authStorage } from '../services/authStorage';
 import { User } from '../types';
+import { useUIStore } from './useUIStore';
 
 type SessionPurgeHandler = (userId?: string | null) => Promise<void> | void;
 const sessionPurgeHandlers = new Set<SessionPurgeHandler>();
@@ -37,6 +38,7 @@ interface AuthState {
 }
 
 const purgeAllSessionData = async (userId?: string | null) => {
+  useUIStore.getState().resetUserUIState();
   for (const handler of sessionPurgeHandlers) {
     try {
       await handler(userId);
@@ -117,8 +119,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ user, isAuthenticated: true, isLoading: false, error: null });
       await notifyAuthSuccess(user);
+      useUIStore.getState().showToast(`Bienvenido de vuelta, ${user.name || user.email}`, 'success', '// ACCESO AUTORIZADO');
     } catch (err: any) {
       set({ error: err.message || 'Error al iniciar sesión', isLoading: false });
+      useUIStore.getState().showToast(err.message || 'Error al iniciar sesión', 'error', '// FALLO DE ACCESO');
       throw err;
     }
   },
@@ -135,8 +139,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ user, isAuthenticated: true, isLoading: false, error: null });
       await notifyAuthSuccess(user);
+      useUIStore.getState().showToast(`Bienvenido de vuelta, ${user.name || user.email}`, 'success', '// ACCESO AUTORIZADO');
     } catch (err: any) {
       set({ error: err.message || 'Error al iniciar sesión con Google', isLoading: false });
+      useUIStore.getState().showToast(err.message || 'Error al iniciar sesión con Google', 'error', '// FALLO DE ACCESO');
       throw err;
     }
   },
@@ -153,8 +159,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ user, isAuthenticated: true, isLoading: false, error: null });
       await notifyAuthSuccess(user);
+      useUIStore.getState().showToast(`Bienvenido de vuelta, ${user.name || user.email}`, 'success', '// ACCESO AUTORIZADO');
     } catch (err: any) {
       set({ error: err.message || 'Error al iniciar sesión con Apple', isLoading: false });
+      useUIStore.getState().showToast(err.message || 'Error al iniciar sesión con Apple', 'error', '// FALLO DE ACCESO');
       throw err;
     }
   },
@@ -172,8 +180,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ user, isAuthenticated: true, isLoading: false, error: null });
       await notifyAuthSuccess(user);
+      useUIStore.getState().showToast('Cuenta configurada exitosamente. Bienvenido a AyeTasks.', 'success', '// REGISTRO COMPLETADO');
     } catch (err: any) {
       set({ error: err.message || 'Error en el registro', isLoading: false });
+      useUIStore.getState().showToast(err.message || 'Error en el registro', 'error', '// ERROR DE REGISTRO');
       throw err;
     }
   },
@@ -198,6 +208,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await purgeAllSessionData(currentUserId);
 
     set({ user: null, isAuthenticated: false, isLoading: false, error: null });
+    useUIStore.getState().showToast('Sesión finalizada y credenciales purgadas', 'info', '// SESIÓN CERRADA');
   },
 
   deleteAccount: async () => {
@@ -207,10 +218,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await api.deleteAccount();
     } catch (err: any) {
       set({ error: err.message || 'Error al eliminar cuenta', isLoading: false });
+      useUIStore.getState().showToast(err.message || 'Error al eliminar cuenta', 'error', '// ERROR');
       throw err;
     } finally {
       await purgeAllSessionData(currentUserId);
       set({ user: null, isAuthenticated: false, isLoading: false, error: null });
+      useUIStore.getState().showToast(
+        'Cuenta eliminada permanentemente del sistema',
+        'error',
+        '// CUENTA ELIMINADA',
+        6000
+      );
     }
   },
 }));

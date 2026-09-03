@@ -28,6 +28,10 @@ class Task(SoftDeleteDocument):
     date: str = Field(index=True)  # YYYY-MM-DD (scheduled board date)
     due_date: Optional[str] = Field(default=None, index=True)  # YYYY-MM-DD (optional delivery deadline date)
     due_time: Optional[str] = None  # HH:MM (ej. 16:30)
+    task_type: str = "task"  # "task" | "event"
+    start_time: Optional[str] = None  # HH:MM (ej. 10:00)
+    end_time: Optional[str] = None  # HH:MM (ej. 11:30)
+    location: Optional[str] = None  # Lugar / ubicación del evento
     estimated_duration_minutes: int = 30
     actual_duration_seconds: int = 0
     status: TaskStatus = TaskStatus.TODO

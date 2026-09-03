@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { translations, Language } from '../i18n/translations';
+import { useUIStore } from './useUIStore';
 
 const LANGUAGE_STORAGE_KEY = '@ayetasks_selected_language';
 
@@ -32,6 +33,12 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
       await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
     } catch {}
     set({ language: lang, t: translations[lang] });
+    useUIStore.getState().showToast(
+      lang === 'es' ? 'Idioma cambiado a Español' : 'Language switched to English',
+      'info',
+      '// IDIOMA // LANGUAGE',
+      3500
+    );
   },
 
   toggleLanguage: async () => {
