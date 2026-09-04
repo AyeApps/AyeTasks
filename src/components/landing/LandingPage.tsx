@@ -8,7 +8,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { CheckCircle2, Clock, Zap, Sun, Moon, Languages, ShieldCheck } from 'lucide-react-native';
+import { CheckCircle2, Clock, Zap, Sun, Moon, Languages, ShieldCheck, ArrowUpRight } from 'lucide-react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from '../../store/useLanguageStore';
 import { AyeLogo } from '../ui/AyeLogo';
@@ -29,7 +29,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartAuth }) => {
     es: {
       badge: '✦ AYETASKS · GESTOR DE TAREAS Y TIEMPO',
       heroTitle: 'Tu espacio de trabajo y proyectos, enfocado en lo que realmente importa.',
-      heroSub: 'Organiza tus pendientes, gestiona proyectos mediante subtareas claras y mantén el control del tiempo dedicado a cada objetivo. Sin distracciones ni configuraciones innecesarias.',
+      heroSub: 'Organiza tus pendientes, gestiona proyectos mediante subtareas claras y mantén el control del tiempo dedicado a cada objetivo. Sin distracciones ni configuraciones complejas.',
       ctaBtn: 'COMENZAR AHORA ➔',
       loginBtn: 'INICIAR SESIÓN',
       feature1Title: 'Jerarquía y Subtareas Claras',
@@ -38,10 +38,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartAuth }) => {
       feature2Desc: 'Cronometra tu tiempo de concentración en cada tarea con un solo toque y monitorea tus horas productivas de la semana.',
       feature3Title: 'Sincronización Inmediata',
       feature3Desc: 'Continúa exactamente donde lo dejaste. Tus tareas y avances se actualizan al instante entre todos tus dispositivos.',
+      securityTitle: 'Privacidad y Control Total',
+      securityDesc: 'Tus listas de tareas y tiempos de enfoque son estrictamente privados. Cero rastreo publicitario ni venta de datos.',
       footerText: 'AyeTasks es parte de la suite de software AyeApps. Privado, seguro y diseñado para alta productividad.',
     },
     en: {
-      badge: '✦ AYETASKS · HIGH-VELOCITY TASK & TIME MANAGER',
+      badge: '✦ AYETASKS · FOCUSED WORKSPACE & TASKS',
       heroTitle: 'Your focused workspace for tasks and projects that matter.',
       heroSub: 'Organize your to-dos, break down complex projects into clear subtasks, and track time spent on every goal. Pure focus without endless setup.',
       ctaBtn: 'GET STARTED NOW ➔',
@@ -52,6 +54,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartAuth }) => {
       feature2Desc: 'Track dedicated deep work sessions on each task with a single tap and review your productive hours across the week.',
       feature3Title: 'Instant Synchronization',
       feature3Desc: 'Pick up right where you left off. Your tasks, progress, and timers stay in sync in real-time across all your devices.',
+      securityTitle: 'Privacy & Complete Ownership',
+      securityDesc: 'Your task lists and focus sessions remain strictly confidential. Zero third-party ad networks, zero data selling.',
       footerText: 'AyeTasks is part of the AyeApps software suite. Private, secure, and built for high productivity.',
     },
   }[isEs ? 'es' : 'en'];
@@ -63,110 +67,218 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartAuth }) => {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.bgBase }]}
+      style={[styles.container, { backgroundColor: 'transparent' }]}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
-      {/* Top Navigation Bar */}
-      <View style={[styles.header, { borderBottomColor: colors.borderBase }]}>
-        <View style={styles.brandRow}>
+      {/* 1. Atelier Top Navigation Bar */}
+      <View style={[styles.navbar, { borderBottomColor: colors.borderColor }]}>
+        <View style={styles.navBrand}>
           <AyeLogo width={36} color={colors.accent} />
-          <View style={styles.brandTextCol}>
-            <Text style={[styles.brandTitle, { color: colors.textPrimary }]}>AyeTasks</Text>
-            <Text style={[styles.brandSub, { color: colors.textSecondary }]}>AyeApps Suite</Text>
+          <View style={styles.brandTitleCol}>
+            <Text style={[styles.brandTitle, { color: colors.textPrimary }]}>AYETASKS</Text>
+            <Text style={[styles.brandSub, { color: colors.accent }]}>Atelier Productivity Suite</Text>
           </View>
         </View>
 
-        <View style={styles.headerActions}>
+        <View style={styles.navActions}>
+          {/* Language Switcher */}
           <TouchableOpacity
-            style={[styles.headerBtn, { borderColor: colors.borderBase, backgroundColor: colors.bgSurface }]}
+            style={[
+              styles.navIconBtn,
+              {
+                borderColor: colors.borderColor,
+                backgroundColor: colors.bgSurface,
+                ...(Platform.OS === 'web' ? { boxShadow: `3px 3px 0px 0px ${colors.shadowColor}` } : {}),
+              },
+            ]}
             onPress={toggleLanguage}
-            accessibilityLabel="Toggle Language"
+            activeOpacity={0.8}
           >
-            <Languages size={15} color={colors.accent} />
-            <Text style={[styles.headerBtnText, { color: colors.textPrimary }]}>
+            <Languages size={15} color={colors.accent} strokeWidth={2.5} />
+            <Text style={[styles.navActionText, { color: colors.textPrimary }]}>
               {language.toUpperCase()}
             </Text>
           </TouchableOpacity>
 
+          {/* Theme Mode Switcher */}
           <TouchableOpacity
-            style={[styles.headerBtn, { borderColor: colors.borderBase, backgroundColor: colors.bgSurface }]}
+            style={[
+              styles.navIconBtn,
+              {
+                borderColor: colors.borderColor,
+                backgroundColor: colors.bgSurface,
+                ...(Platform.OS === 'web' ? { boxShadow: `3px 3px 0px 0px ${colors.shadowColor}` } : {}),
+              },
+            ]}
             onPress={toggleTheme}
-            accessibilityLabel="Toggle Theme"
+            activeOpacity={0.8}
           >
-            {isDark ? <Sun size={15} color={colors.accent} /> : <Moon size={15} color={colors.accent} />}
+            {isDark ? (
+              <Sun size={16} color={colors.accentWarning} strokeWidth={2.5} />
+            ) : (
+              <Moon size={16} color={colors.textPrimary} strokeWidth={2.5} />
+            )}
           </TouchableOpacity>
 
+          {/* Quick Login Button */}
           <TouchableOpacity
-            style={[styles.navAuthBtn, { backgroundColor: colors.accent, borderColor: colors.borderBase }]}
+            style={[
+              styles.loginBtn,
+              {
+                borderColor: colors.borderColor,
+                backgroundColor: colors.bgSurface,
+                ...(Platform.OS === 'web' ? { boxShadow: `3px 3px 0px 0px ${colors.shadowColor}` } : {}),
+              },
+            ]}
             onPress={() => handleCta('nav_login')}
+            activeOpacity={0.8}
           >
-            <Text style={styles.navAuthBtnText}>{t.loginBtn}</Text>
+            <Text style={[styles.loginBtnText, { color: colors.textPrimary }]}>{t.loginBtn}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Hero Section */}
-      <View style={styles.heroSection}>
-        <View style={[styles.badgePill, { borderColor: colors.accent, backgroundColor: isDark ? 'rgba(254, 157, 1, 0.1)' : 'rgba(254, 157, 1, 0.15)' }]}>
+      {/* 2. Hero Section */}
+      <View style={[styles.heroSection, isMobile && styles.heroSectionMobile]}>
+        <View
+          style={[
+            styles.badgeBox,
+            {
+              backgroundColor: colors.bgSurface,
+              borderColor: colors.borderColor,
+              ...(Platform.OS === 'web' ? { boxShadow: `3px 3px 0px 0px ${colors.accent}` } : {}),
+            },
+          ]}
+        >
           <Text style={[styles.badgeText, { color: colors.accent }]}>{t.badge}</Text>
         </View>
 
-        <Text style={[styles.heroTitle, { color: colors.textPrimary, fontSize: isMobile ? 28 : 44 }]}>
+        <Text style={[styles.heroTitle, isMobile && styles.heroTitleMobile, { color: colors.textPrimary }]}>
           {t.heroTitle}
         </Text>
 
-        <Text style={[styles.heroSub, { color: colors.textSecondary, fontSize: isMobile ? 15 : 17 }]}>
+        <Text style={[styles.heroSubtitle, isMobile && styles.heroSubtitleMobile, { color: colors.textSecondary }]}>
           {t.heroSub}
         </Text>
 
-        <TouchableOpacity
-          style={[styles.heroCtaBtn, { backgroundColor: colors.accent }]}
-          onPress={() => handleCta('hero_primary')}
-          activeOpacity={0.88}
+        <View style={[styles.ctaRow, isMobile && styles.ctaRowMobile]}>
+          <TouchableOpacity
+            style={[
+              styles.mainCtaBtn,
+              {
+                backgroundColor: colors.accent,
+                borderColor: colors.borderColor,
+                ...(Platform.OS === 'web' ? { boxShadow: `4px 4px 0px 0px ${colors.shadowColor}` } : {}),
+              },
+            ]}
+            onPress={() => handleCta('hero_primary')}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.mainCtaText, { color: '#000000' }]}>{t.ctaBtn}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.secondaryCtaBtn,
+              {
+                backgroundColor: colors.bgSurface,
+                borderColor: colors.borderColor,
+                ...(Platform.OS === 'web' ? { boxShadow: `4px 4px 0px 0px ${colors.shadowColor}` } : {}),
+              },
+            ]}
+            onPress={() => handleCta('hero_secondary')}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.secondaryCtaText, { color: colors.textPrimary }]}>{t.loginBtn}</Text>
+            <ArrowUpRight size={16} color={colors.textPrimary} strokeWidth={2.5} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 3. Core Feature Cards */}
+      <View style={[styles.gridSection, isMobile && styles.gridSectionMobile]}>
+        {/* Feature 1 */}
+        <View
+          style={[
+            styles.featureCard,
+            {
+              backgroundColor: colors.bgSurface,
+              borderColor: colors.borderColor,
+              ...(Platform.OS === 'web' ? { boxShadow: `4px 4px 0px 0px ${colors.shadowColor}` } : {}),
+            },
+          ]}
         >
-          <Text style={styles.heroCtaText}>{t.ctaBtn}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Feature Cards Grid */}
-      <View style={[styles.featuresGrid, { flexDirection: isMobile ? 'column' : 'row' }]}>
-        <View style={[styles.featureCard, { backgroundColor: colors.bgSurface, borderColor: colors.borderBase }]}>
-          <View style={[styles.featureIconBox, { backgroundColor: isDark ? 'rgba(254, 157, 1, 0.12)' : 'rgba(254, 157, 1, 0.2)' }]}>
-            <CheckCircle2 size={24} color={colors.accent} />
+          <View style={[styles.cardIconBox, { backgroundColor: colors.accentSubtle, borderColor: colors.borderColor }]}>
+            <CheckCircle2 size={24} color={colors.accent} strokeWidth={2.2} />
           </View>
-          <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>{t.feature1Title}</Text>
-          <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{t.feature1Desc}</Text>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{t.feature1Title}</Text>
+          <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>{t.feature1Desc}</Text>
         </View>
 
-        <View style={[styles.featureCard, { backgroundColor: colors.bgSurface, borderColor: colors.borderBase }]}>
-          <View style={[styles.featureIconBox, { backgroundColor: isDark ? 'rgba(254, 157, 1, 0.12)' : 'rgba(254, 157, 1, 0.2)' }]}>
-            <Clock size={24} color={colors.accent} />
+        {/* Feature 2 */}
+        <View
+          style={[
+            styles.featureCard,
+            {
+              backgroundColor: colors.bgSurface,
+              borderColor: colors.borderColor,
+              ...(Platform.OS === 'web' ? { boxShadow: `4px 4px 0px 0px ${colors.shadowColor}` } : {}),
+            },
+          ]}
+        >
+          <View style={[styles.cardIconBox, { backgroundColor: colors.accentSubtle, borderColor: colors.borderColor }]}>
+            <Clock size={24} color={colors.accent} strokeWidth={2.2} />
           </View>
-          <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>{t.feature2Title}</Text>
-          <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{t.feature2Desc}</Text>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{t.feature2Title}</Text>
+          <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>{t.feature2Desc}</Text>
         </View>
 
-        <View style={[styles.featureCard, { backgroundColor: colors.bgSurface, borderColor: colors.borderBase }]}>
-          <View style={[styles.featureIconBox, { backgroundColor: isDark ? 'rgba(254, 157, 1, 0.12)' : 'rgba(254, 157, 1, 0.2)' }]}>
-            <Zap size={24} color={colors.accent} />
+        {/* Feature 3 */}
+        <View
+          style={[
+            styles.featureCard,
+            {
+              backgroundColor: colors.bgSurface,
+              borderColor: colors.borderColor,
+              ...(Platform.OS === 'web' ? { boxShadow: `4px 4px 0px 0px ${colors.shadowColor}` } : {}),
+            },
+          ]}
+        >
+          <View style={[styles.cardIconBox, { backgroundColor: colors.accentSubtle, borderColor: colors.borderColor }]}>
+            <Zap size={24} color={colors.accent} strokeWidth={2.2} />
           </View>
-          <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>{t.feature3Title}</Text>
-          <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{t.feature3Desc}</Text>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{t.feature3Title}</Text>
+          <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>{t.feature3Desc}</Text>
         </View>
       </View>
 
-      {/* Trust & Privacy Guarantee */}
-      <View style={[styles.trustBox, { borderColor: colors.borderBase, backgroundColor: colors.bgSurface }]}>
-        <ShieldCheck size={20} color={colors.accent} />
-        <Text style={[styles.trustText, { color: colors.textSecondary }]}>
-          {t.footerText}
-        </Text>
+      {/* 4. Privacy & Trust Banner */}
+      <View
+        style={[
+          styles.trustBanner,
+          {
+            backgroundColor: colors.bgSurface,
+            borderColor: colors.borderColor,
+            ...(Platform.OS === 'web' ? { boxShadow: `4px 4px 0px 0px ${colors.shadowColor}` } : {}),
+          },
+        ]}
+      >
+        <ShieldCheck size={28} color={colors.accentSuccess} strokeWidth={2.2} />
+        <View style={styles.trustTextCol}>
+          <Text style={[styles.trustTitle, { color: colors.textPrimary }]}>{t.securityTitle}</Text>
+          <Text style={[styles.trustDesc, { color: colors.textSecondary }]}>{t.securityDesc}</Text>
+        </View>
       </View>
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={[styles.copyright, { color: colors.textSecondary }]}>
+      {/* 5. Minimalist Footer */}
+      <View style={[styles.footer, { borderTopColor: colors.borderColor }]}>
+        <View style={styles.footerBrandRow}>
+          <AyeLogo width={28} color={colors.accent} />
+          <Text style={[styles.footerBrandText, { color: colors.textPrimary }]}>AyeTasks</Text>
+        </View>
+        <Text style={[styles.footerText, { color: colors.textSecondary }]}>{t.footerText}</Text>
+        <Text style={[styles.copyrightText, { color: colors.textMuted }]}>
           © {new Date().getFullYear()} AyeApps. All rights reserved.
         </Text>
       </View>
@@ -183,170 +295,240 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 60,
   },
-  header: {
+  navbar: {
     width: '100%',
-    maxWidth: 1100,
-    paddingHorizontal: 24,
-    paddingVertical: 18,
+    maxWidth: 1120,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 18,
     borderBottomWidth: 1,
   },
-  brandRow: {
+  navBrand: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  brandTextCol: {
-    flexDirection: 'column',
+  brandTitleCol: {
+    justifyContent: 'center',
   },
   brandTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    fontSize: 16,
+    fontWeight: '900',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    letterSpacing: 1.2,
   },
   brandSub: {
-    fontSize: 11,
-    fontFamily: Platform.OS === 'web' ? 'JetBrains Mono, monospace' : undefined,
+    fontSize: 10,
+    fontWeight: '700',
     letterSpacing: 0.5,
   },
-  headerActions: {
+  navActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  headerBtn: {
+  navIconBtn: {
+    height: 38,
+    paddingHorizontal: 12,
+    borderWidth: 2,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1.5,
   },
-  headerBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'web' ? 'JetBrains Mono, monospace' : undefined,
-  },
-  navAuthBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderWidth: 1.5,
-  },
-  navAuthBtnText: {
-    color: '#000000',
-    fontSize: 12,
+  navActionText: {
+    fontSize: 11,
     fontWeight: '800',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  loginBtn: {
+    height: 38,
+    paddingHorizontal: 16,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loginBtnText: {
+    fontSize: 12,
+    fontWeight: '900',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     letterSpacing: 0.5,
   },
   heroSection: {
-    maxWidth: 820,
-    paddingHorizontal: 24,
-    paddingTop: 54,
-    paddingBottom: 40,
+    width: '100%',
+    maxWidth: 860,
     alignItems: 'center',
-    textAlign: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 64,
+    paddingBottom: 48,
   },
-  badgePill: {
-    borderWidth: 1,
+  heroSectionMobile: {
+    paddingTop: 36,
+    paddingBottom: 32,
+  },
+  badgeBox: {
     paddingHorizontal: 14,
-    paddingVertical: 5,
+    paddingVertical: 6,
+    borderWidth: 1.5,
     marginBottom: 20,
   },
   badgeText: {
     fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    fontFamily: Platform.OS === 'web' ? 'JetBrains Mono, monospace' : undefined,
+    fontWeight: '900',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    letterSpacing: 1.2,
   },
   heroTitle: {
+    fontSize: 44,
     fontWeight: '900',
-    lineHeight: 46,
     textAlign: 'center',
+    lineHeight: 52,
     letterSpacing: -0.5,
-    marginBottom: 18,
+    marginBottom: 20,
   },
-  heroSub: {
+  heroTitleMobile: {
+    fontSize: 28,
+    lineHeight: 34,
+  },
+  heroSubtitle: {
+    fontSize: 17,
     lineHeight: 26,
     textAlign: 'center',
     maxWidth: 680,
-    marginBottom: 32,
+    marginBottom: 36,
   },
-  heroCtaBtn: {
+  heroSubtitleMobile: {
+    fontSize: 15,
+    lineHeight: 23,
+    marginBottom: 28,
+  },
+  ctaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  ctaRowMobile: {
+    flexDirection: 'column',
+    width: '100%',
+    gap: 12,
+  },
+  mainCtaBtn: {
+    height: 48,
     paddingHorizontal: 28,
-    paddingVertical: 14,
     borderWidth: 2,
-    borderColor: '#000000',
-    shadowColor: '#FE9D01',
-    shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  heroCtaText: {
-    color: '#000000',
-    fontSize: 14,
+  mainCtaText: {
+    fontSize: 13,
     fontWeight: '900',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    letterSpacing: 1,
+  },
+  secondaryCtaBtn: {
+    height: 48,
+    paddingHorizontal: 24,
+    borderWidth: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  secondaryCtaText: {
+    fontSize: 13,
+    fontWeight: '800',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     letterSpacing: 0.8,
   },
-  featuresGrid: {
+  gridSection: {
     width: '100%',
-    maxWidth: 1100,
-    paddingHorizontal: 24,
+    maxWidth: 1080,
+    flexDirection: 'row',
     gap: 20,
-    marginBottom: 40,
+    paddingHorizontal: 24,
+    marginVertical: 20,
+  },
+  gridSectionMobile: {
+    flexDirection: 'column',
+    gap: 16,
   },
   featureCard: {
     flex: 1,
     padding: 24,
-    borderWidth: 1.5,
-    shadowColor: 'rgba(0,0,0,0.5)',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 0.8,
-    shadowRadius: 0,
-    elevation: 3,
+    borderWidth: 2,
   },
-  featureIconBox: {
+  cardIconBox: {
     width: 46,
     height: 46,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#FE9D01',
   },
-  featureTitle: {
-    fontSize: 16,
+  cardTitle: {
+    fontSize: 17,
     fontWeight: '800',
-    marginBottom: 10,
-    letterSpacing: 0.2,
+    marginBottom: 8,
+    letterSpacing: -0.2,
   },
-  featureDesc: {
-    fontSize: 13,
-    lineHeight: 20,
+  cardDesc: {
+    fontSize: 14,
+    lineHeight: 21,
   },
-  trustBox: {
-    maxWidth: 900,
+  trustBanner: {
+    width: '100%',
+    maxWidth: 1080,
     marginHorizontal: 24,
-    padding: 16,
-    borderWidth: 1,
+    marginTop: 20,
+    padding: 20,
+    borderWidth: 2,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 40,
+    gap: 16,
   },
-  trustText: {
-    fontSize: 12,
-    lineHeight: 18,
+  trustTextCol: {
     flex: 1,
-    fontFamily: Platform.OS === 'web' ? 'JetBrains Mono, monospace' : undefined,
+  },
+  trustTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  trustDesc: {
+    fontSize: 13,
+    lineHeight: 18,
   },
   footer: {
-    paddingTop: 10,
+    width: '100%',
+    maxWidth: 1120,
+    marginTop: 60,
+    paddingTop: 32,
+    paddingHorizontal: 24,
+    borderTopWidth: 1,
+    alignItems: 'center',
   },
-  copyright: {
+  footerBrandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  footerBrandText: {
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  footerText: {
+    fontSize: 13,
+    textAlign: 'center',
+    maxWidth: 540,
+    lineHeight: 19,
+    marginBottom: 8,
+  },
+  copyrightText: {
     fontSize: 11,
-    fontFamily: Platform.OS === 'web' ? 'JetBrains Mono, monospace' : undefined,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
 });
