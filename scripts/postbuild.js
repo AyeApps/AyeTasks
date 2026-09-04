@@ -7,7 +7,8 @@ const indexPath = path.join(distPath, 'index.html');
 if (fs.existsSync(indexPath)) {
   let html = fs.readFileSync(indexPath, 'utf8');
 
-  const seoTags = `
+  if (!html.includes('G-K8MJ3DHEVC')) {
+    const seoTags = `
     <!-- SEO & Social Meta Tags -->
     <meta name="keywords" content="gestor de tareas, app de proyectos, tickets de trabajo, registro de horas, subtareas, AyeTasks">
     <link rel="canonical" href="https://tasks.ayeapps.com">
@@ -50,10 +51,13 @@ if (fs.existsSync(indexPath)) {
     </script>
   </head>`;
 
-  html = html.replace('</head>', seoTags);
-  html = html.replace('<html lang="en">', '<html lang="es">');
-  fs.writeFileSync(indexPath, html, 'utf8');
-  console.log('✓ AyeTasks SEO injected into dist/index.html');
+    html = html.replace('</head>', seoTags);
+    html = html.replace('<html lang="en">', '<html lang="es">');
+    fs.writeFileSync(indexPath, html, 'utf8');
+    console.log('✓ AyeTasks SEO injected into dist/index.html');
+  } else {
+    console.log('✓ AyeTasks Google Tag and SEO already present in dist/index.html');
+  }
 
   // Create sitemap.xml
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

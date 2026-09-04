@@ -2,14 +2,15 @@
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>AyeTasks — Gestor de Tareas y Proyectos</title>
     <meta name="description" content="Organiza tus pendientes y proyectos en tickets con subtareas y registro de tiempo. Funciona en web y móvil." />
-    <meta name="keywords" content="gestor de tareas, app de proyectos, tickets de trabajo, registro de horas, tareas con subtareas, AyeTasks" />
+    <meta name="keywords" content="gestor de tareas, app de proyectos, tickets de trabajo, registro de horas, subtareas, AyeTasks" />
     <meta name="theme-color" content="#FE9D01" />
 
     <!-- Open Graph / Meta -->
+    <link rel="canonical" href="https://tasks.ayeapps.com" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://tasks.ayeapps.com" />
     <meta property="og:title" content="AyeTasks — Gestor de Tareas y Proyectos" />
@@ -21,22 +22,23 @@
     <meta name="twitter:title" content="AyeTasks — Gestor de Tareas y Proyectos" />
     <meta name="twitter:description" content="Organiza tus pendientes y proyectos en tickets con subtareas y registro de tiempo." />
 
-    <!-- The `react-native-web` recommended style reset -->
-    <style id="expo-reset">
-      html,
-      body {
-        height: 100%;
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "AyeTasks",
+      "operatingSystem": "Web, iOS, Android",
+      "applicationCategory": "BusinessApplication",
+      "description": "Organiza tus pendientes y proyectos en tickets con subtareas y registro de tiempo.",
+      "url": "https://tasks.ayeapps.com",
+      "author": {
+        "@type": "Organization",
+        "name": "AyeApps",
+        "url": "https://ayeapps.com"
       }
-      body {
-        overflow: hidden;
-      }
-      #root {
-        display: flex;
-        height: 100%;
-        flex: 1;
-      }
-    </style>
-    <link rel="icon" href="/favicon.ico" />
+    }
+    </script>
 
     <!-- Cloudflare Turnstile (Bot Protection) -->
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
@@ -50,12 +52,33 @@
 
       gtag('config', 'G-K8MJ3DHEVC');
     </script>
+
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
   </head>
 
   <body>
+    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
     <noscript>
       Para utilizar AyeTasks necesitas habilitar JavaScript en tu navegador.
     </noscript>
+    <!-- The root element for your Expo app. -->
     <div id="root"></div>
   </body>
 </html>

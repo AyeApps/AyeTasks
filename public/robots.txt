@@ -1,0 +1,5 @@
+User-Agent: *
+Allow: /
+
+Host: https://tasks.ayeapps.com
+Sitemap: https://tasks.ayeapps.com/sitemap.xml
