@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { THEME } from './src/constants/theme';
 import { AuthScreen } from './src/components/auth/AuthScreen';
+import { LandingPage } from './src/components/landing/LandingPage';
 import { FloatingDock } from './src/components/board/FloatingDock';
 import { QuickAddTaskModal } from './src/components/board/QuickAddTaskModal';
 import { WeekHeader } from './src/components/board/WeekHeader';
@@ -34,6 +35,13 @@ export default function App() {
   const initWorkHours = useUIStore((state) => state.initWorkHours);
   const viewMode = useUIStore((state) => state.viewMode);
   const initLanguage = useLanguageStore((state) => state.initLanguage);
+
+  const [showAuth, setShowAuth] = React.useState<boolean>(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return true;
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    return hash.includes('login') || hash.includes('auth') || search.includes('auth') || search.includes('login');
+  });
 
   const focusedTaskId = useTimerStore((state) => state.focusedTaskId);
 
@@ -234,9 +242,13 @@ export default function App() {
           </View>
         </SafeAreaView>
       ) : !isAuthenticated ? (
-        <SafeAreaView style={styles.safeArea}>
-          <AuthScreen />
-        </SafeAreaView>
+        Platform.OS === 'web' && !showAuth ? (
+          <LandingPage onStartAuth={() => setShowAuth(true)} />
+        ) : (
+          <SafeAreaView style={styles.safeArea}>
+            <AuthScreen onBack={Platform.OS === 'web' ? () => setShowAuth(false) : undefined} />
+          </SafeAreaView>
+        )
       ) : (
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.container}>

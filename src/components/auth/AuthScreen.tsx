@@ -56,7 +56,11 @@ const AppleIcon = ({ size = 18, color = '#FFFFFF' }: { size?: number; color?: st
   </Svg>
 );
 
-export const AuthScreen: React.FC = () => {
+export interface AuthScreenProps {
+  onBack?: () => void;
+}
+
+export const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
 
@@ -77,6 +81,69 @@ export const AuthScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isAppleAuthAvailable, setIsAppleAuthAvailable] = useState(Platform.OS === 'ios');
   const [serverStatus, setServerStatus] = useState<'online' | 'offline' | 'checking'>('checking');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileWidgetId = React.useRef<string | null>(null);
+
+  // Cloudflare Turnstile setup on Web
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+
+    const siteKey = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+
+    const renderWidget = () => {
+      const win = window as any;
+      if (!win.turnstile) return;
+      const container = document.getElementById('ayetasks-turnstile-widget');
+      if (!container) return;
+
+      if (turnstileWidgetId.current !== null) {
+        try {
+          win.turnstile.reset(turnstileWidgetId.current);
+        } catch {}
+        return;
+      }
+
+      try {
+        turnstileWidgetId.current = win.turnstile.render('#ayetasks-turnstile-widget', {
+          sitekey: siteKey,
+          theme: isDark ? 'dark' : 'light',
+          callback: (token: string) => {
+            setTurnstileToken(token);
+          },
+          'expired-callback': () => {
+            setTurnstileToken(null);
+          },
+          'error-callback': () => {
+            setTurnstileToken(null);
+          },
+        });
+      } catch (e) {
+        console.warn('[Turnstile] render error:', e);
+      }
+    };
+
+    let timer: any;
+    if ((window as any).turnstile) {
+      renderWidget();
+    } else {
+      timer = setInterval(() => {
+        if ((window as any).turnstile) {
+          renderWidget();
+          clearInterval(timer);
+        }
+      }, 300);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+      if (turnstileWidgetId.current !== null && (window as any).turnstile) {
+        try {
+          (window as any).turnstile.remove(turnstileWidgetId.current);
+        } catch {}
+        turnstileWidgetId.current = null;
+      }
+    };
+  }, [authMode, isDark]);
 
   const checkStatus = React.useCallback(async () => {
     setServerStatus('checking');
@@ -258,18 +325,35 @@ export const AuthScreen: React.FC = () => {
       return;
     }
 
+    if (Platform.OS === 'web' && !turnstileToken) {
+      setIsAccountNotFound(false);
+      setAuthError(
+        language === 'es'
+          ? 'POR FAVOR COMPLETA LA VERIFICACIÓN DE SEGURIDAD'
+          : 'PLEASE COMPLETE SECURITY VERIFICATION'
+      );
+      return;
+    }
+
     setIsAccountNotFound(false);
     setAuthError('');
     setIsLoading(true);
 
     try {
       if (authMode === 'register') {
-        await register(authName.trim() || 'USER', trimmedEmail, trimmedPassword);
+        await register(authName.trim() || 'USER', trimmedEmail, trimmedPassword, turnstileToken || undefined);
       } else {
-        await login(trimmedEmail, trimmedPassword);
+        await login(trimmedEmail, trimmedPassword, turnstileToken || undefined);
       }
       await AsyncStorage.setItem(REMEMBERED_EMAIL_KEY, trimmedEmail);
     } catch (err: any) {
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && (window as any).turnstile && turnstileWidgetId.current !== null) {
+        try {
+          (window as any).turnstile.reset(turnstileWidgetId.current);
+        } catch {}
+        setTurnstileToken(null);
+      }
+
       const msg = err.message || '';
       if (
         msg.includes('ACCOUNT_NOT_FOUND') ||
@@ -302,6 +386,30 @@ export const AuthScreen: React.FC = () => {
         { backgroundColor: 'transparent' },
       ]}
     >
+      {/* Top Left Controls: Back to Landing on Web */}
+      {onBack && (
+        <View style={styles.topLeftControls}>
+          <TouchableOpacity
+            style={[
+              styles.themeToggleTop,
+              styles.backButtonTop,
+              {
+                borderColor: colors.borderColor,
+                backgroundColor: colors.bgSurface,
+                shadowColor: colors.shadowColor,
+                ...(Platform.OS === 'web' ? { boxShadow: `3px 3px 0px 0px ${colors.shadowColor}` } : {}),
+              },
+            ]}
+            onPress={onBack}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.langText, { color: colors.textPrimary, fontWeight: '700' }]}>
+              ← {language === 'es' ? 'INICIO' : 'HOME'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Top Right Controls: Language Switcher & Theme Toggle */}
       <View style={styles.topRightControls}>
         <TouchableOpacity
@@ -614,8 +722,15 @@ export const AuthScreen: React.FC = () => {
                   <Text style={[styles.errorAlertText, { color: colors.accentDanger }]}>
                     {authError}
                   </Text>
+                  </View>
+                ) : null}
+
+              {/* Cloudflare Turnstile Verification Widget on Web */}
+              {Platform.OS === 'web' && (
+                <View style={styles.turnstileContainer}>
+                  <div id="ayetasks-turnstile-widget" />
                 </View>
-              ) : null}
+              )}
 
               {/* Submit Button */}
               <TouchableOpacity
@@ -724,6 +839,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
+  topLeftControls: {
+    position: 'absolute',
+    top: 24,
+    left: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  backButtonTop: {
+    width: 'auto',
+    paddingHorizontal: 14,
+  },
   topRightControls: {
     position: 'absolute',
     top: 24,
@@ -732,6 +859,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     zIndex: 100,
+  },
+  turnstileContainer: {
+    marginVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 68,
   },
   themeToggleTop: {
     width: 44,

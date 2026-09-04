@@ -35,6 +35,19 @@ if (fs.existsSync(indexPath)) {
       }
     }
     </script>
+
+    <!-- Cloudflare Turnstile (Bot Protection) -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-K8MJ3DHEVC"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-K8MJ3DHEVC');
+    </script>
   </head>`;
 
   html = html.replace('</head>', seoTags);

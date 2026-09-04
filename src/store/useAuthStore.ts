@@ -28,10 +28,10 @@ interface AuthState {
   error: string | null;
 
   initAuth: () => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, turnstileToken?: string) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
   loginWithApple: (identityToken: string, name?: string, email?: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, turnstileToken?: string) => Promise<void>;
   updateProfile: (data: { name?: string; email?: string; current_password?: string; new_password?: string }) => Promise<void>;
   logout: () => Promise<void>;
   deleteAccount: () => Promise<void>;
@@ -107,13 +107,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user: null, isAuthenticated: false, isInitializing: false, isLoading: false });
   },
 
-  login: async (email, password) => {
+  login: async (email, password, turnstileToken) => {
     set({ isLoading: true, error: null });
     try {
       const currentUserId = get().user?.id;
       await purgeAllSessionData(currentUserId);
 
-      const data = await api.login({ email, password });
+      const data = await api.login({ email, password, turnstile_token: turnstileToken });
       await authStorage.setTokens(data.access_token, data.refresh_token);
       const user = await api.getMe();
 
@@ -167,14 +167,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  register: async (name, email, password) => {
+  register: async (name, email, password, turnstileToken) => {
     set({ isLoading: true, error: null });
     try {
       const currentUserId = get().user?.id;
       await purgeAllSessionData(currentUserId);
 
-      await api.register({ name, email, password });
-      const data = await api.login({ email, password });
+      const regData = await api.register({ name, email, password, turnstile_token: turnstileToken });
+      const data = regData?.access_token ? regData : await api.login({ email, password, turnstile_token: turnstileToken });
       await authStorage.setTokens(data.access_token, data.refresh_token);
       const user = await api.getMe();
 
