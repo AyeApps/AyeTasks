@@ -88,7 +88,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
 
-    const siteKey = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+    const siteKey = process.env.EXPO_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAAEn3YN77Mt7jKxas';
 
     const renderWidget = () => {
       const win = window as any;
