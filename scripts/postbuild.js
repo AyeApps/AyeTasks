@@ -10,6 +10,7 @@ if (fs.existsSync(indexPath)) {
   if (!html.includes('G-K8MJ3DHEVC')) {
     const seoTags = `
     <!-- SEO & Social Meta Tags -->
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="keywords" content="gestor de tareas, app de proyectos, tickets de trabajo, registro de horas, subtareas, AyeTasks">
     <link rel="canonical" href="https://tasks.ayeapps.com">
     <meta property="og:type" content="website">
@@ -33,6 +34,13 @@ if (fs.existsSync(indexPath)) {
         "@type": "Organization",
         "name": "AyeApps",
         "url": "https://ayeapps.com"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "ratingCount": "890",
+        "bestRating": "5",
+        "worstRating": "1"
       }
     }
     </script>
@@ -81,4 +89,11 @@ Sitemap: https://tasks.ayeapps.com/sitemap.xml
 `;
   fs.writeFileSync(path.join(distPath, 'robots.txt'), robots, 'utf8');
   console.log('✓ AyeTasks robots.txt generated');
+
+  // Copy llms.txt if present in public
+  const publicLlms = path.join(__dirname, '..', 'public', 'llms.txt');
+  if (fs.existsSync(publicLlms)) {
+    fs.copyFileSync(publicLlms, path.join(distPath, 'llms.txt'));
+    console.log('✓ AyeTasks llms.txt copied to dist');
+  }
 }

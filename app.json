@@ -36,6 +36,7 @@
       "backgroundColor": "#050505",
       "meta": {
         "viewport": "width=device-width, initial-scale=1, shrink-to-fit=no",
+        "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
         "description": "Organiza tus pendientes y proyectos en tickets con subtareas y registro de tiempo.",
         "keywords": "gestor de tareas, app de proyectos, tickets de trabajo, registro de horas, subtareas, AyeTasks",
         "og:title": "AyeTasks — Gestor de Tareas y Proyectos",

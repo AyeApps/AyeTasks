@@ -1,0 +1,21 @@
+# AyeTasks — Software Atelier
+
+> High-velocity hierarchical task manager, project tracking, and time management engine from the AyeApps suite.
+
+## Product & Capabilities
+- [AyeTasks](https://tasks.ayeapps.com): Hierarchical task management with deep subtask nesting (up to 25 levels), interactive pomodoro and custom timers, comprehensive work logs, and Kanban/list views.
+- Real-time synchronization across clients using WebSockets and secure JWT authentication.
+- Single unified multiplatform codebase for Web, iOS, and Android built on React Native and Expo SDK 57.
+- Atelier Cyber-Amber design system (#FE9D01 / #050505) with dark/light themes, keyboard-first navigation, and solid neo-brutalist tactile elevation.
+
+## AyeApps Ecosystem
+- [AyeApps Software Atelier](https://ayeapps.com): Software engineering atelier, cloud infrastructure, and bespoke digital platforms.
+- [AyeVideoDownloader](https://video.ayeapps.com): High-velocity, lossless 4K HDR multimedia conversion and audio extraction engine.
+- [AyeTasks](https://tasks.ayeapps.com): High-velocity hierarchical task manager, time tracker, and project execution engine.
+- [AyeFinance](https://finance.ayeapps.com): High-performance personal finance management, multi-account ledger, and 30-day cash flow forecasting engine.
+- [AyeAuth](https://accounts.ayeapps.com): Centralized identity, OAuth2 SSO, and cross-application permissions provider.
+
+## Technical Architecture
+- Backend: Python 3.13, FastAPI (Strict Async), Beanie ODM (MongoDB), WebSockets.
+- Frontend: React Native + Expo SDK 57, React Native Web, Zustand, Atelier Design Tokens.
+- Security: OAuth2, HS256 JWT, Automated Token Revocation, Rate Limiting, Cloudflare Turnstile.
