@@ -37,6 +37,7 @@ async def get_tasks(
             parent_task_id=str(get_link_id(t.parent_task_id)) if t.parent_task_id else None,
             created_at=t.created_at,
             updated_at=t.updated_at,
+            comments=t.comments,
         )
         for t in tasks
     ]
