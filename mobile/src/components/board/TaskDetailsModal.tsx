@@ -28,6 +28,7 @@ import {
 } from 'lucide-react-native';
 import { THEME } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
+import { useUIStore } from '../../store/useUIStore';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useTimerStore } from '../../store/useTimerStore';
 import { useTranslation } from '../../store/useLanguageStore';
@@ -237,8 +238,10 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
       const updatedComments = [...(task.comments || []), newComment.trim()];
       await updateTask(task.id, { comments: updatedComments });
       setNewComment('');
+      useUIStore.getState().showToast('Output registrado con éxito', 'success', '// OUTPUT AÑADIDO');
     } catch (e) {
       console.error(e);
+      useUIStore.getState().showToast('Error al registrar output', 'error', '// ERROR');
     }
   };
 
@@ -247,8 +250,10 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
     try {
       const updatedComments = task.comments.filter((_, idx) => idx !== indexToDelete);
       await updateTask(task.id, { comments: updatedComments });
+      useUIStore.getState().showToast('Output eliminado con éxito', 'success', '// OUTPUT ELIMINADO');
     } catch (e) {
       console.error(e);
+      useUIStore.getState().showToast('Error al eliminar output', 'error', '// ERROR');
     }
   };
 
