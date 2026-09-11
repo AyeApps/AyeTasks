@@ -9,21 +9,36 @@ const USER_KEY = 'ayetasks_user_profile';
 const isWeb = Platform.OS === 'web';
 
 export const authStorage = {
-  async setTokens(accessToken: string, refreshToken: string): Promise<void> {
-    if (isWeb) {
-      await Promise.all([
-        AsyncStorage.setItem(TOKEN_KEY, accessToken),
-        AsyncStorage.setItem(REFRESH_KEY, refreshToken),
-      ]);
-    } else {
-      await Promise.all([
-        SecureStore.setItemAsync(TOKEN_KEY, accessToken, {
+  async setTokens(accessToken: string, refreshToken?: string): Promise<void> {
+    try {
+      await AsyncStorage.setItem(TOKEN_KEY, accessToken);
+      if (refreshToken) {
+        await AsyncStorage.setItem(REFRESH_KEY, refreshToken);
+      } else {
+        await AsyncStorage.removeItem(REFRESH_KEY);
+      }
+    } catch {}
+
+    if (!isWeb) {
+      try {
+        await SecureStore.setItemAsync(TOKEN_KEY, accessToken, {
           keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        }),
-        SecureStore.setItemAsync(REFRESH_KEY, refreshToken, {
-          keychainAccessible: SecureStore.WHEN_UNLOCKED,
-        }),
-      ]);
+        });
+      } catch {
+        await SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => {});
+      }
+
+      try {
+        if (refreshToken) {
+          await SecureStore.setItemAsync(REFRESH_KEY, refreshToken, {
+            keychainAccessible: SecureStore.WHEN_UNLOCKED,
+          });
+        } else {
+          await SecureStore.deleteItemAsync(REFRESH_KEY).catch(() => {});
+        }
+      } catch {
+        await SecureStore.deleteItemAsync(REFRESH_KEY).catch(() => {});
+      }
     }
   },
 

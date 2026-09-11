@@ -21,6 +21,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { THEME } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuthStore } from '../../store/useAuthStore';
+import { authStorage } from '../../services/authStorage';
 import { useTranslation } from '../../store/useLanguageStore';
 import { AyeLogo } from '../ui/AyeLogo';
 import { api, getAuthApiBaseUrl } from '../../services/api';
@@ -255,7 +256,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
         const rawNonce = await Crypto.getRandomBytesAsync(16);
         const nonce = Array.from(rawNonce).map((b) => b.toString(16).padStart(2, '0')).join('');
         const statePayload = JSON.stringify({
-          origin: typeof window !== 'undefined' ? window.location.origin : 'https://tasks.ayeapps.com',
+          origin: typeof window !== 'undefined' ? window.location.origin : AuthSession.makeRedirectUri({ scheme: 'ayetasks' }).replace(/\/$/, ''),
           app: 'tasks',
           nonce,
         });
@@ -276,10 +277,22 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
           return;
         }
 
-        const result = await WebBrowser.openAuthSessionAsync(authUrl, callbackUrl);
+        const nativeReturnUrl = AuthSession.makeRedirectUri({ scheme: 'ayetasks' });
+        const result = await WebBrowser.openAuthSessionAsync(authUrl, nativeReturnUrl);
         if (result.type === 'success' && result.url) {
           const urlObj = new URL(result.url.replace('#', '?'));
-          const idToken = urlObj.searchParams.get('id_token') || urlObj.searchParams.get('access_token');
+          const accessToken = urlObj.searchParams.get('access_token');
+          const refreshToken = urlObj.searchParams.get('refresh_token');
+          
+          if (accessToken) {
+            // The backend already authenticated the user and redirected with an access token
+            await authStorage.setTokens(accessToken, refreshToken || undefined);
+            const user = await api.getMe();
+            useAuthStore.setState({ user, isAuthenticated: true, isLoading: false, error: null });
+            return;
+          }
+
+          const idToken = urlObj.searchParams.get('id_token');
           if (idToken) {
             await loginWithApple(idToken);
           }

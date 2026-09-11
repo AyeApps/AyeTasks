@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import {
   ActivityIndicator,
+  Linking,
   Platform,
   SafeAreaView,
   StatusBar,
@@ -49,6 +50,38 @@ export default function App() {
 
   // Initialize socket realtime connection
   useSyncSocket();
+
+  // Deep linking radar for auth tokens or shortcuts (e.g. ayetasks://auth?access_token=...)
+  useEffect(() => {
+    const handleUrl = (url: string | null) => {
+      if (!url) return;
+      if (url.includes('access_token=') || url.includes('refresh_token=')) {
+        initAuth(url);
+      }
+    };
+
+    // Cold start deep link check
+    Linking.getInitialURL()
+      .then((initialUrl) => {
+        if (initialUrl) {
+          handleUrl(initialUrl);
+        }
+      })
+      .catch((err) => {
+        if (__DEV__) {
+          console.warn('[DeepLinking] Failed to get initial URL:', err);
+        }
+      });
+
+    // Runtime deep link events listener
+    const subscription = Linking.addEventListener('url', (event) => {
+      handleUrl(event.url);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [initAuth]);
 
   useEffect(() => {
     initTheme();

@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { Linking } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '../services/api';
 import { authStorage } from '../services/authStorage';
 import { User } from '../types';
@@ -27,7 +29,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
 
-  initAuth: () => Promise<void>;
+  initAuth: (url?: string) => Promise<void>;
   login: (email: string, password: string, turnstileToken?: string) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
   loginWithApple: (identityToken: string, name?: string, email?: string) => Promise<void>;
@@ -55,6 +57,8 @@ const notifyAuthSuccess = async (user: User) => {
   }
 };
 
+let initAuthLock: Promise<void> | null = null;
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
@@ -62,49 +66,79 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  initAuth: async () => {
-    set({ isInitializing: true, error: null });
-    try {
-      // Check for OAuth tokens in URL hash or query string (e.g. from Apple redirect)
-      if (typeof window !== 'undefined' && (window.location?.hash || window.location?.search)) {
+  initAuth: async (url?: string) => {
+    if (initAuthLock) return initAuthLock;
+
+    initAuthLock = (async () => {
+      set({ isInitializing: true, error: null });
+      try {
+        // Check for OAuth tokens in URL hash or query string (e.g. from Apple redirect on Web)
+        if (typeof window !== 'undefined' && (window.location?.hash || window.location?.search)) {
+          try {
+            const hashString = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : '';
+            const searchString = window.location.search.startsWith('?') ? window.location.search.substring(1) : '';
+            const hashParams = new URLSearchParams(hashString);
+            const searchParams = new URLSearchParams(searchString);
+
+            const errorParam = hashParams.get('error') || searchParams.get('error');
+            if (errorParam) {
+              set({ error: errorParam === 'apple_auth_failed' ? 'Error al autenticar con Apple' : errorParam });
+              window.history.replaceState(null, '', window.location.pathname);
+            }
+
+            const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+            const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
+
+            if (accessToken) {
+              await authStorage.setTokens(accessToken, refreshToken || undefined);
+              window.history.replaceState(null, '', window.location.pathname);
+            }
+          } catch {}
+        }
+
+        // Check for tokens passed via native deep link (e.g. ayetasks://auth?access_token=...)
         try {
-          const hashString = window.location.hash.startsWith('#') ? window.location.hash.substring(1) : '';
-          const searchString = window.location.search.startsWith('?') ? window.location.search.substring(1) : '';
-          const hashParams = new URLSearchParams(hashString);
-          const searchParams = new URLSearchParams(searchString);
-
-          const errorParam = hashParams.get('error') || searchParams.get('error');
-          if (errorParam) {
-            set({ error: errorParam === 'apple_auth_failed' ? 'Error al autenticar con Apple' : errorParam });
-            window.history.replaceState(null, '', window.location.pathname);
-          }
-
-          const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
-          const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
-
-          if (accessToken && refreshToken) {
-            await authStorage.setTokens(accessToken, refreshToken);
-            window.history.replaceState(null, '', window.location.pathname);
+          const targetUrl = url || (await Linking.getInitialURL());
+          if (targetUrl && (targetUrl.includes('access_token=') || targetUrl.includes('refresh_token='))) {
+            const lastConsumedUrl = await AsyncStorage.getItem('@ayetasks_last_initial_url');
+            if (lastConsumedUrl !== targetUrl) {
+              const rawQuery = targetUrl.includes('?')
+                ? targetUrl.split('?')[1]
+                : (targetUrl.includes('#') ? targetUrl.split('#')[1] : '');
+              const params = new URLSearchParams(rawQuery);
+              const accessToken = params.get('access_token') || params.get('token');
+              const refreshToken = params.get('refresh_token');
+              if (accessToken) {
+                await authStorage.setTokens(accessToken, refreshToken || undefined);
+                await AsyncStorage.setItem('@ayetasks_last_initial_url', targetUrl);
+              }
+            }
           }
         } catch {}
-      }
 
-      const token = await authStorage.getAccessToken();
-      if (token) {
-        try {
-          const user = await api.getMe();
-          set({ user, isAuthenticated: true, isInitializing: false, isLoading: false });
-          await notifyAuthSuccess(user);
-          return;
-        } catch {
-          // Token expired or invalid -> purge all residual session data
-          await purgeAllSessionData();
+        const token = await authStorage.getAccessToken();
+        if (token) {
+          try {
+            const user = await api.getMe();
+            set({ user, isAuthenticated: true, isInitializing: false, isLoading: false });
+            await notifyAuthSuccess(user);
+            return;
+          } catch {
+            // Token expired or invalid -> purge all residual session data
+            await purgeAllSessionData();
+          }
         }
+      } catch {
+        await purgeAllSessionData();
       }
-    } catch {
-      await purgeAllSessionData();
+      set({ user: null, isAuthenticated: false, isInitializing: false, isLoading: false });
+    })();
+
+    try {
+      await initAuthLock;
+    } finally {
+      initAuthLock = null;
     }
-    set({ user: null, isAuthenticated: false, isInitializing: false, isLoading: false });
   },
 
   login: async (email, password, turnstileToken) => {
