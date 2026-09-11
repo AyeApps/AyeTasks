@@ -25,6 +25,7 @@ export interface Task {
   parentTaskId?: string;
   createdAt: string;
   updatedAt: string;
+  comments?: string[];
 }
 
 export interface TaskConnection {

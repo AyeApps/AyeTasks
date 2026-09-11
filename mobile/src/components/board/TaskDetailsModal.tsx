@@ -98,6 +98,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
   const [colorTag, setColorTag] = useState('#00c853');
   const [customHex, setCustomHex] = useState('#00c853');
   const [isSaving, setIsSaving] = useState(false);
+  const [newComment, setNewComment] = useState('');
 
   // Compute preset dates for quick selection
   const computedPresets = React.useMemo(() => {
@@ -227,6 +228,27 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
       console.error(e);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim() || !task) return;
+    try {
+      const updatedComments = [...(task.comments || []), newComment.trim()];
+      await updateTask(task.id, { comments: updatedComments });
+      setNewComment('');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteComment = async (indexToDelete: number) => {
+    if (!task || !task.comments) return;
+    try {
+      const updatedComments = task.comments.filter((_, idx) => idx !== indexToDelete);
+      await updateTask(task.id, { comments: updatedComments });
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -529,6 +551,50 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                       {t.taskDetails.noNotesText}
                     </Text>
                   )}
+                </View>
+              </View>
+
+              {/* Comments / Outputs View */}
+              <View style={[styles.viewSection, { marginTop: 16 }]}>
+                <View style={styles.labelWithIcon}>
+                  <FileText size={14} color={colors.accent} />
+                  <Text style={[styles.viewSectionLabel, { color: colors.textPrimary }]}>
+                    {t.taskDetails.commentsLabel || 'COMENTARIOS / OUTPUTS'}
+                  </Text>
+                </View>
+                
+                {/* List of comments */}
+                {task.comments && task.comments.length > 0 ? (
+                  <View style={{ gap: 8, marginBottom: 12 }}>
+                    {task.comments.map((comment, idx) => (
+                      <View key={idx} style={[styles.viewBox, { backgroundColor: colors.bgSurface, borderColor: colors.borderMuted, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }]}>
+                        <Text style={[styles.viewBoxText, { color: colors.textPrimary, flex: 1 }]}>{comment}</Text>
+                        <TouchableOpacity onPress={() => handleDeleteComment(idx)} activeOpacity={0.6} style={{ padding: 4 }}>
+                          <Trash2 size={14} color={colors.textMuted} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                {/* Add new comment */}
+                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
+                  <TextInput
+                    style={[{ flex: 1, backgroundColor: colors.bgSurface, borderColor: colors.borderMuted, color: colors.textPrimary, minHeight: 44, fontSize: 13, padding: 10, borderWidth: 1.5, fontFamily: THEME.fonts.mono }]}
+                    placeholder="Escribir output de la tarea terminada..."
+                    placeholderTextColor={colors.textMuted}
+                    value={newComment}
+                    onChangeText={setNewComment}
+                    multiline
+                  />
+                  <TouchableOpacity
+                    style={[{ backgroundColor: colors.accent, paddingHorizontal: 14, height: 44, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: colors.borderColor }]}
+                    onPress={handleAddComment}
+                    disabled={!newComment.trim()}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={{ color: colors.textInvert, fontWeight: '900', fontFamily: THEME.fonts.mono, fontSize: 11, letterSpacing: 1 }}>AÑADIR</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
 

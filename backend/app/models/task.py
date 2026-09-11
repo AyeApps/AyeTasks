@@ -39,6 +39,7 @@ class Task(SoftDeleteDocument):
     color_tag: str = "#00c853"
     position_index: int = 0
     parent_task_id: Optional[Link["Task"]] = None
+    comments: list[str] = Field(default_factory=list)
 
     class Settings:
         name = "tasks"

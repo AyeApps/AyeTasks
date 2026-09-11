@@ -39,6 +39,7 @@ class TaskUpdate(BaseModel):
     priority: Optional[TaskPriority] = None
     color_tag: Optional[str] = None
     position_index: Optional[int] = None
+    comments: Optional[list[str]] = None
 
 
 class TaskResponse(BaseModel):
@@ -62,3 +63,4 @@ class TaskResponse(BaseModel):
     parent_task_id: Optional[str]
     created_at: datetime
     updated_at: datetime
+    comments: list[str] = Field(default_factory=list)
