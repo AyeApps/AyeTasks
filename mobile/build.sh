@@ -123,7 +123,32 @@ clean_prebuild() {
   rm -rf android/ ios/
   log "Ejecutando npx expo prebuild --clean..."
   npx expo prebuild --clean
+  # Auto-inyectar local.properties para Android (MacOS) para que Gradle no falle sin Android Studio
+  if [[ "$OSTYPE" == "darwin"* ]] && [[ -d "$HOME/Library/Android/sdk" ]]; then
+    echo "sdk.dir=$HOME/Library/Android/sdk" > android/local.properties
+    log "Archivo android/local.properties inyectado automáticamente"
+  fi
+
   success "Proyectos nativos regenerados limpiamente"
+}
+
+build_apk() {
+  check_dependencies
+  if [[ ! -d "android" ]]; then
+    prebuild_android
+  fi
+  header "Compilando Standalone Release APK..."
+  (cd android && ./gradlew assembleRelease)
+  local apk_path="android/app/build/outputs/apk/release/app-release.apk"
+  if [[ -f "$apk_path" ]]; then
+    success "APK Standalone generado exitosamente en:"
+    echo -e "${BOLD}${GREEN}$SCRIPT_DIR/$apk_path${RESET}"
+    echo ""
+    log "Este APK incluye todo el bundle offline y se conecta a la nube directamente."
+    log "Puedes pasarlo a tu celular o instalarlo con: adb install $apk_path"
+  else
+    error "No se encontró el archivo APK generado."
+  fi
 }
 
 # ── Menú interactivo ──────────────────────────────────────────
@@ -138,9 +163,10 @@ choose_target() {
   echo "  5) Run:     Compilar y lanzar en iOS (expo run:ios)"
   echo "  6) Metro:   Iniciar Metro Bundler (--dev-client)"
   echo "  7) Clean:   Limpiar y regenerar carpetas nativas desde cero"
-  echo "  8) Salir"
+  echo "  8) APK:     Generar Standalone Release APK (sin requerir Mac ni Metro)"
+  echo "  9) Salir"
   echo ""
-  read -rp "Elige una opción [1-8]: " choice
+  read -rp "Elige una opción [1-9]: " choice
   case $choice in
     1) TARGET="android" ;;
     2) TARGET="ios" ;;
@@ -149,7 +175,8 @@ choose_target() {
     5) TARGET="run-ios" ;;
     6) TARGET="start" ;;
     7) TARGET="clean" ;;
-    8) echo "Saliendo."; exit 0 ;;
+    8) TARGET="apk" ;;
+    9) echo "Saliendo."; exit 0 ;;
     *) warn "Opción inválida"; choose_target ;;
   esac
 }
@@ -206,8 +233,12 @@ case "$TARGET" in
     check_dependencies
     clean_prebuild
     ;;
+  apk)
+    build_apk
+    exit 0
+    ;;
   *)
-    error "Target inválido: '$TARGET'. Usa: android | ios | all | run-android | run-ios | start | clean"
+    error "Target inválido: '$TARGET'. Usa: android | ios | all | run-android | run-ios | start | clean | apk"
     ;;
 esac
 

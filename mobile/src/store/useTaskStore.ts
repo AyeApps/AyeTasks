@@ -368,6 +368,7 @@ export const useTaskStore = create<TaskStore>((set, get) => {
             color_tag: newTask.colorTag,
             position_index: newTask.positionIndex,
             parent_task_id: newTask.parentTaskId,
+            comments: newTask.comments,
           });
 
           const serverTask: Task = {
@@ -443,6 +444,7 @@ export const useTaskStore = create<TaskStore>((set, get) => {
             priority: updates.priority,
             color_tag: updates.colorTag,
             position_index: updates.positionIndex,
+            comments: updates.comments,
           });
           const pending = getPendingCount();
           useUIStore.getState().setSyncStatus(pending === 0 ? 'synced' : 'pending', pending);

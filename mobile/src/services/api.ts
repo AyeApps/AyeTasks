@@ -2,7 +2,23 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authStorage } from './authStorage';
 
-export function getApiBaseUrl(): string {
+export const getApiBaseUrl = (): string => {
+  // 1. Auto-detect local web development (localhost, 127.0.0.1, or LAN IP)
+  const isWebLocal =
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('192.168.') ||
+      window.location.hostname.startsWith('10.') ||
+      window.location.hostname.endsWith('.local'));
+
+  if (isWebLocal) {
+    const host = window.location.hostname;
+    return `http://${host}:8001/api/v1`;
+  }
+
+  // 2. Explicit ENV URL for mobile / native builds
   if (process.env.EXPO_PUBLIC_API_URL) {
     let url = process.env.EXPO_PUBLIC_API_URL;
     if (Platform.OS === 'android' && url.includes('localhost')) {
@@ -11,21 +27,32 @@ export function getApiBaseUrl(): string {
     return url;
   }
 
-  // Auto-detect local development
-  const isWebLocal =
-    Platform.OS === 'web' &&
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-  if (__DEV__ || isWebLocal) {
+  // 3. Auto-detect Native Dev (Expo Metro)
+  if (__DEV__) {
     const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
     return `http://${host}:8001/api/v1`;
   }
 
   return 'https://api-aytsks.ayeapps.com/api/v1';
-}
+};
 
-export function getAuthApiBaseUrl(): string {
+export const getAuthApiBaseUrl = (): string => {
+  // 1. Auto-detect local web development (localhost, 127.0.0.1, or LAN IP)
+  const isWebLocal =
+    Platform.OS === 'web' &&
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('192.168.') ||
+      window.location.hostname.startsWith('10.') ||
+      window.location.hostname.endsWith('.local'));
+
+  if (isWebLocal) {
+    const host = window.location.hostname;
+    return `http://${host}:8000/api/v1`;
+  }
+
+  // 2. Explicit ENV URL for mobile / native builds
   if (process.env.EXPO_PUBLIC_AUTH_API_URL) {
     let url = process.env.EXPO_PUBLIC_AUTH_API_URL;
     if (Platform.OS === 'android' && url.includes('localhost')) {
@@ -34,19 +61,14 @@ export function getAuthApiBaseUrl(): string {
     return url;
   }
 
-  // Auto-detect local development
-  const isWebLocal =
-    Platform.OS === 'web' &&
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-  if (__DEV__ || isWebLocal) {
+  // 3. Auto-detect Native Dev (Expo Metro)
+  if (__DEV__) {
     const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
     return `http://${host}:8000/api/v1`;
   }
 
   return 'https://api-auth.ayeapps.com/api/v1';
-}
+};
 
 
 interface RequestOptions extends RequestInit {

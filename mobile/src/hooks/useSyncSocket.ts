@@ -6,16 +6,8 @@ import { useTaskStore } from '../store/useTaskStore';
 import { useTimerStore } from '../store/useTimerStore';
 import { useUIStore } from '../store/useUIStore';
 
-export function getWsBaseUrl(): string {
-  if (process.env.EXPO_PUBLIC_WS_URL) {
-    let url = process.env.EXPO_PUBLIC_WS_URL;
-    if (Platform.OS === 'android' && url.includes('localhost')) {
-      url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
-    }
-    return url;
-  }
-
-  // Auto-detect local development
+export const getWsBaseUrl = (): string => {
+  // 1. Auto-detect local web development (localhost, 127.0.0.1, or LAN IP)
   const isWebLocal =
     Platform.OS === 'web' &&
     typeof window !== 'undefined' &&
@@ -25,13 +17,28 @@ export function getWsBaseUrl(): string {
       window.location.hostname.startsWith('10.') ||
       window.location.hostname.endsWith('.local'));
 
-  if (__DEV__ || isWebLocal) {
-    const host = Platform.OS === 'android' ? '10.0.2.2' : (typeof window !== 'undefined' && window.location.hostname ? window.location.hostname : 'localhost');
+  if (isWebLocal) {
+    const host = window.location.hostname;
+    return `ws://${host}:8001/api/v1/ws/sync`;
+  }
+
+  // 2. Explicit ENV URL for mobile / native builds
+  if (process.env.EXPO_PUBLIC_WS_URL) {
+    let url = process.env.EXPO_PUBLIC_WS_URL;
+    if (Platform.OS === 'android' && url.includes('localhost')) {
+      url = url.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
+    }
+    return url;
+  }
+
+  // 3. Auto-detect Native Dev (Expo Metro)
+  if (__DEV__) {
+    const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
     return `ws://${host}:8001/api/v1/ws/sync`;
   }
 
   return 'wss://api-aytsks.ayeapps.com/api/v1/ws/sync';
-}
+};
 
 export function useSyncSocket() {
   const wsRef = useRef<WebSocket | null>(null);

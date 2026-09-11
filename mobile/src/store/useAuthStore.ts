@@ -123,9 +123,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             set({ user, isAuthenticated: true, isInitializing: false, isLoading: false });
             await notifyAuthSuccess(user);
             return;
-          } catch {
-            // Token expired or invalid -> purge all residual session data
-            await purgeAllSessionData();
+          } catch (e: any) {
+            if (e?.message === 'No autorizado' || e?.message === 'Credenciales incorrectas') {
+              // Token expirado y no se pudo refrescar (el refresh falla internamente en api.ts)
+              await purgeAllSessionData();
+            } else {
+              // Error de red, timeout o servidor caído (Railway cold start).
+              // Asumimos que el usuario sigue autenticado para permitir modo offline.
+              set({ isAuthenticated: true, isInitializing: false, isLoading: false });
+              return;
+            }
           }
         }
       } catch {
@@ -137,7 +144,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       await initAuthLock;
     } finally {
-      initAuthLock = null;
+      initAuthLock = null; // 🔓 Free the lock so future deep links can trigger initAuth again!
     }
   },
 

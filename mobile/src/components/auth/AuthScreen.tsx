@@ -256,7 +256,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
         const rawNonce = await Crypto.getRandomBytesAsync(16);
         const nonce = Array.from(rawNonce).map((b) => b.toString(16).padStart(2, '0')).join('');
         const statePayload = JSON.stringify({
-          origin: typeof window !== 'undefined' ? window.location.origin : AuthSession.makeRedirectUri({ scheme: 'ayetasks' }).replace(/\/$/, ''),
+          origin: (Platform.OS === 'web' && typeof window !== 'undefined' && window.location) ? window.location.origin : AuthSession.makeRedirectUri({ scheme: 'ayetasks' }).replace(/\/$/, ''),
           app: 'tasks',
           nonce,
         });

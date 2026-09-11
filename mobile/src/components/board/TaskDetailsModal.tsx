@@ -568,7 +568,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                   <View style={{ gap: 8, marginBottom: 12 }}>
                     {task.comments.map((comment, idx) => (
                       <View key={idx} style={[styles.viewBox, { backgroundColor: colors.bgSurface, borderColor: colors.borderMuted, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }]}>
-                        <Text style={[styles.viewBoxText, { color: colors.textPrimary, flex: 1 }]}>{comment}</Text>
+                        <Text style={[styles.viewBoxText, { color: colors.textPrimary, flex: 1, fontFamily: THEME.fonts.mono, fontSize: 13 }]}>{comment}</Text>
                         <TouchableOpacity onPress={() => handleDeleteComment(idx)} activeOpacity={0.6} style={{ padding: 4 }}>
                           <Trash2 size={14} color={colors.textMuted} />
                         </TouchableOpacity>
