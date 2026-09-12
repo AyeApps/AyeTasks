@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     description="AyeTasks - Visual Graph Productivity & Task Management API",
-    version="1.0.0",
+    version="4.0.5",
     lifespan=lifespan,
     default_response_class=ORJSONResponse,
     docs_url="/docs" if settings.APP_ENV != "production" else None,

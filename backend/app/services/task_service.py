@@ -57,6 +57,7 @@ class TaskService:
             color_tag=data.color_tag,
             position_index=data.position_index,
             parent_task_id=parent_link,
+            comments=data.comments or [],
         )
         await task.save()
 

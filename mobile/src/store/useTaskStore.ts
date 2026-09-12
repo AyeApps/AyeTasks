@@ -109,6 +109,7 @@ export const useTaskStore = create<TaskStore>((set, get) => {
               color_tag: t.colorTag,
               position_index: t.positionIndex,
               parent_task_id: t.parentTaskId && !t.parentTaskId.startsWith('task-') ? t.parentTaskId : undefined,
+              comments: t.comments,
             });
 
             set((curr) => {
@@ -246,6 +247,7 @@ export const useTaskStore = create<TaskStore>((set, get) => {
             parentTaskId: t.parent_task_id,
             createdAt: t.created_at,
             updatedAt: t.updated_at,
+            comments: t.comments || [],
           }));
 
           const mappedConns: TaskConnection[] = remoteConns.map((c: any) => ({
@@ -311,6 +313,7 @@ export const useTaskStore = create<TaskStore>((set, get) => {
         parentTaskId: taskData.parentTaskId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        comments: taskData.comments || [],
       };
 
       // 1. Immediately insert locally and save to user-scoped AsyncStorage

@@ -20,6 +20,7 @@ class TaskCreate(BaseModel):
     color_tag: str = "#00c853"
     position_index: int = 0
     parent_task_id: Optional[str] = None
+    comments: Optional[list[str]] = None
 
 
 class TaskUpdate(BaseModel):

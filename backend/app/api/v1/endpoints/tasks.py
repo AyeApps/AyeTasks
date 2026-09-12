@@ -67,6 +67,7 @@ async def create_task(data: TaskCreate, current_user: CurrentUser):
         parent_task_id=str(get_link_id(t.parent_task_id)) if t.parent_task_id else None,
         created_at=t.created_at,
         updated_at=t.updated_at,
+        comments=t.comments,
     )
 
 
@@ -94,6 +95,7 @@ async def update_task(id: str, data: TaskUpdate, current_user: CurrentUser):
         parent_task_id=str(get_link_id(t.parent_task_id)) if t.parent_task_id else None,
         created_at=t.created_at,
         updated_at=t.updated_at,
+        comments=t.comments,
     )
 
 

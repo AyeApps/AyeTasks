@@ -133,7 +133,7 @@ export const SidebarDrawer: React.FC = () => {
                   ]}
                 >
                   <Text style={[styles.cyberTagText, { color: colors.accent }]}>
-                    V4.0.1
+                    V4.0.5
                   </Text>
                 </View>
               </View>

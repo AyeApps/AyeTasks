@@ -224,7 +224,7 @@ export const WeekHeader: React.FC = () => {
                     ]}
                   >
                     <Text style={[styles.engineTagText, { color: colors.textPrimary }]}>
-                      V4.0.1
+                      V4.0.5
                     </Text>
                   </View>
                 ) : null}

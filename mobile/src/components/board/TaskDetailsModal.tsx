@@ -68,7 +68,7 @@ interface TaskDetailsModalProps {
 }
 
 export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
-  task,
+  task: initialTask,
   isOpen,
   onClose,
 }) => {
@@ -76,6 +76,9 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
   const isMobile = width < 768;
   const { colors } = useTheme();
   const { t } = useTranslation();
+
+  const storeTask = useTaskStore((state) => state.tasks.find((t) => t.id === initialTask?.id));
+  const task = storeTask || initialTask;
 
   const updateTask = useTaskStore((state) => state.updateTask);
   const deleteTask = useTaskStore((state) => state.deleteTask);
