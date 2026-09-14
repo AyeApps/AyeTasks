@@ -105,6 +105,30 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const progressBtnScale = useRef(new Animated.Value(1)).current;
   const checkboxScale = useRef(new Animated.Value(1)).current;
   const trackingPulseAnim = useRef(new Animated.Value(1)).current;
+  const overduePulseAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (deadlineInfo?.isOverdue && !isCompleted) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(overduePulseAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: false,
+          }),
+          Animated.timing(overduePulseAnim, {
+            toValue: 0,
+            duration: 500,
+            useNativeDriver: false,
+          }),
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    } else {
+      overduePulseAnim.setValue(0);
+    }
+  }, [deadlineInfo?.isOverdue, isCompleted]);
 
   useEffect(() => {
     if (isBgTrackRunning || isFocusModeRunning) {
@@ -226,6 +250,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         outputRange: ['rgba(255, 171, 0, 0.04)', 'rgba(255, 171, 0, 0.16)'],
       })
     : 'transparent';
+
+
 
   useEffect(() => {
     if (cardRef.current && canvasCtx?.registerCard) {
@@ -569,25 +595,79 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 style={[
                   styles.deadlineCardBox,
                   {
+                    borderWidth: 1.5,
                     borderColor: deadlineInfo.color,
                     backgroundColor: deadlineInfo.backgroundColor,
                   },
+                  deadlineInfo.isOverdue && {
+                    position: 'relative',
+                    overflow: 'hidden',
+                    shadowColor: deadlineInfo.color,
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: isDark ? 0.4 : 0.2,
+                    shadowRadius: 5,
+                  }
                 ]}
               >
-                <View style={styles.deadlineHeaderRow}>
+                {deadlineInfo.isOverdue ? (
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[
+                      StyleSheet.absoluteFill,
+                      {
+                        backgroundColor: isDark ? '#3d3405' : '#fef9c3',
+                        opacity: overduePulseAnim,
+                        zIndex: 1,
+                      },
+                    ]}
+                  />
+                ) : null}
+
+                {deadlineInfo.isOverdue ? (
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[
+                      StyleSheet.absoluteFill,
+                      {
+                        borderWidth: 2,
+                        borderColor: '#ffd600',
+                        opacity: overduePulseAnim,
+                        zIndex: 2,
+                      },
+                    ]}
+                  />
+                ) : null}
+
+                <View style={[styles.deadlineHeaderRow, { zIndex: 3 }]}>
                   <View style={styles.deadlineLeftGroup}>
-                    <Target size={10} color={deadlineInfo.color} strokeWidth={3} />
-                    <Text style={[styles.deadlineTargetText, { color: deadlineInfo.color }]}>
+                    <Target size={11} color={deadlineInfo.color} strokeWidth={2.5} />
+                    <Text
+                      style={[styles.deadlineTargetText, { color: deadlineInfo.color }]}
+                      numberOfLines={1}
+                    >
                       {t.taskCard.due} {task.dueDate?.slice(5)}{task.dueTime ? ` @ ${task.dueTime}` : ''}
                     </Text>
                   </View>
 
-                  <Text style={[styles.deadlineRemainingPill, { color: deadlineInfo.color }]}>
-                    ● {deadlineInfo.label}
-                  </Text>
+                  <View
+                    style={[
+                      styles.deadlineBadgePill,
+                      {
+                        borderColor: deadlineInfo.color,
+                        backgroundColor: isDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.5)',
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.deadlineRemainingPill, { color: deadlineInfo.color }]}
+                      numberOfLines={1}
+                    >
+                      ● {deadlineInfo.label}
+                    </Text>
+                  </View>
                 </View>
 
-                <View style={[styles.deadlineTrackBg, { backgroundColor: colors.borderMuted }]}>
+                <View style={[styles.deadlineTrackBg, { backgroundColor: colors.borderMuted, zIndex: 3 }]}>
                   <View
                     style={[
                       styles.deadlineTrackFill,
@@ -986,15 +1066,53 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                   style={[
                     styles.microChip,
                     {
+                      borderWidth: 1.5,
                       borderColor: deadlineInfo.color,
                       backgroundColor: deadlineInfo.backgroundColor,
                     },
+                    deadlineInfo.isOverdue && {
+                      position: 'relative',
+                      overflow: 'hidden',
+                      shadowColor: deadlineInfo.color,
+                      shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: isDark ? 0.4 : 0.2,
+                      shadowRadius: 4,
+                    }
                   ]}
                 >
-                  <Target size={10} color={deadlineInfo.color} strokeWidth={2.5} />
-                  <Text style={[styles.microChipText, { color: deadlineInfo.color }]}>
-                    {task.dueTime || deadlineInfo.label}
-                  </Text>
+                  {deadlineInfo.isOverdue ? (
+                    <Animated.View
+                      pointerEvents="none"
+                      style={[
+                        StyleSheet.absoluteFill,
+                        {
+                          backgroundColor: isDark ? '#3d3405' : '#fef9c3',
+                          opacity: overduePulseAnim,
+                          zIndex: 1,
+                        },
+                      ]}
+                    />
+                  ) : null}
+                  {deadlineInfo.isOverdue ? (
+                    <Animated.View
+                      pointerEvents="none"
+                      style={[
+                        StyleSheet.absoluteFill,
+                        {
+                          borderWidth: 1.5,
+                          borderColor: '#ffd600',
+                          opacity: overduePulseAnim,
+                          zIndex: 2,
+                        },
+                      ]}
+                    />
+                  ) : null}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, zIndex: 3 }}>
+                    <Target size={10} color={deadlineInfo.color} strokeWidth={2.5} />
+                    <Text style={[styles.microChipText, { color: deadlineInfo.color, fontWeight: '900' }]}>
+                      {task.dueTime || deadlineInfo.label}
+                    </Text>
+                  </View>
                 </View>
               ) : null}
 
@@ -1115,32 +1233,41 @@ const styles = StyleSheet.create({
   },
   deadlineCardBox: {
     borderWidth: 1.5,
-    paddingHorizontal: 7,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
     marginBottom: 6,
   },
   deadlineHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 3,
+    gap: 6,
+    marginBottom: 5,
   },
   deadlineLeftGroup: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    flexShrink: 1,
+    minWidth: 0,
   },
   deadlineTargetText: {
-    fontSize: 9.5,
-    fontWeight: '900',
+    fontSize: 9,
+    fontWeight: '800',
     fontFamily: THEME.fonts.mono,
-    letterSpacing: 0.5,
+    letterSpacing: 0.2,
+  },
+  deadlineBadgePill: {
+    flexShrink: 0,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderWidth: 1,
   },
   deadlineRemainingPill: {
-    fontSize: 9.5,
+    fontSize: 8.5,
     fontWeight: '900',
     fontFamily: THEME.fonts.mono,
-    letterSpacing: 0.5,
+    letterSpacing: 0.2,
   },
   deadlineTrackBg: {
     height: 3,

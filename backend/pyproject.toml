@@ -1,6 +1,6 @@
 [project]
 name = "ayetasks-backend"
-version = "4.0.5"
+version = "4.0.6"
 description = "AyeTasks Backend API with FastAPI and Beanie ODM"
 readme = "README.md"
 requires-python = ">=3.12"
