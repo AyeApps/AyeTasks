@@ -1,59 +1,86 @@
 import json
-from typing import List, Union
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 class Settings(BaseSettings):
+    # ==========================================
+    # 🌍 1. CORE / GLOBALES (Idéntico en los 4)
+    # ==========================================
     APP_NAME: str = "AyeTasks"
     APP_ENV: str = "development"
+    HOST: str = "0.0.0.0"
     PORT: int = 8000
+
+    # Base de Datos Global
     MONGODB_URL: str = "mongodb://localhost:27017/ayetasks"
     DATABASE_NAME: str = "ayetasks"
     MONGODB_CERT_B64: str = ""
     MONGODB_CERT_PATH: str = ""
+
+    # Seguridad Compartida
     JWT_SECRET_KEY: str = "super_secure_secret_key_minimum_32_characters_for_ayeapps_atelier"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
-    CORS_ORIGINS: Union[List[str], str] = ["*"]
+
+    # CORS Compartido
+    CORS_ORIGINS: list[str] | str = [
+        "*",
+    ]
+
+    # ==========================================
+    # 🚀 2. ESPECÍFICAS DEL SERVICIO
+    # ==========================================
+    TURNSTILE_SECRET_KEY: str = ""
     EXPO_ACCESS_TOKEN: str = ""
-    GOOGLE_CLIENT_IDS: List[str] = [
+    GOOGLE_CLIENT_IDS: list[str] = [
         "627799707976-gt9uudejrtd5d4b7pubkso0ev35j2rhr.apps.googleusercontent.com",
         "627799707976-dmm76mhsvc1b7d7jcrf2hpfjbtnpb6te.apps.googleusercontent.com",
         "627799707976-ek7dcu7lgfuj06us18cu5gnfuf6n3qqt.apps.googleusercontent.com",
     ]
-    APPLE_CLIENT_IDS: List[str] = [
+    APPLE_CLIENT_IDS: list[str] = [
         "com.ayeapps.ayetasks",
         "com.ayeapps.ayetasks.auth",
         "com.ayeapps.ayetasks.service",
     ]
     APPLE_BUNDLE_ID: str = "com.ayeapps.ayetasks"
 
+    # ==========================================
+    # ⚙️ 3. CONFIGURACIÓN Y VALIDADORES ESTÁNDAR
+    # ==========================================
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        case_sensitive=False,
     )
 
     @field_validator("JWT_SECRET_KEY")
     @classmethod
     def validate_jwt_secret(cls, v: str) -> str:
         if len(v) < 32:
-            raise ValueError("JWT_SECRET_KEY must be at least 32 characters long")
+            raise ValueError("JWT_SECRET_KEY must be at least 32 characters long.")
         return v
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",") if i.strip()]
-        elif isinstance(v, str) and v.startswith("["):
-            try:
-                return json.loads(v)
-            except Exception:
-                return ["*"]
+    def parse_cors_origins(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str):
+            v_stripped = v.strip()
+            if v_stripped.startswith("[") and v_stripped.endswith("]"):
+                try:
+                    return json.loads(v_stripped)
+                except Exception:
+                    cleaned = v_stripped.strip("[]").replace("'", '"')
+                    try:
+                        return json.loads(f"[{cleaned}]")
+                    except Exception:
+                        return [item.strip().strip("'\"") for item in v_stripped.strip("[]").split(",") if item.strip()]
+            return [item.strip().strip("'\"") for item in v.split(",") if item.strip()]
         return v
 
+    @property
+    def is_production(self) -> bool:
+        return self.APP_ENV.lower() == "production"
 
 settings = Settings()
