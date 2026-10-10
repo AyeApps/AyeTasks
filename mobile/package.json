@@ -36,7 +36,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web --port 8081",
     "build": "expo export --platform web && node scripts/postbuild.js",
-    "postexport": "node scripts/postbuild.js"
+    "postexport": "node scripts/postbuild.js",
+    "lint:styles": "node scripts/check-styles.mjs"
   },
   "private": true
 }
