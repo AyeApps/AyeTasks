@@ -48,6 +48,7 @@ interface UIStore {
   quickAddParentTaskId: string | null;
   isAuthModalOpen: boolean;
   isWorkHoursModalOpen: boolean;
+  isImportModalOpen: boolean;
 
   openSidebar: () => void;
   closeSidebar: () => void;
@@ -94,6 +95,8 @@ interface UIStore {
   closeAuthModal: () => void;
   openWorkHoursModal: () => void;
   closeWorkHoursModal: () => void;
+  openImportModal: () => void;
+  closeImportModal: () => void;
   resetUserUIState: () => void;
 }
 
@@ -149,6 +152,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
   quickAddParentTaskId: null,
   isAuthModalOpen: false,
   isWorkHoursModalOpen: false,
+  isImportModalOpen: false,
   toasts: [],
 
   resetUserUIState: () =>
@@ -164,6 +168,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
       quickAddParentTaskId: null,
       isAuthModalOpen: false,
       isWorkHoursModalOpen: false,
+      isImportModalOpen: false,
       pendingSyncCount: 0,
       toasts: [],
     }),
@@ -356,6 +361,9 @@ export const useUIStore = create<UIStore>((set, get) => ({
 
   openWorkHoursModal: () => set({ isWorkHoursModalOpen: true }),
   closeWorkHoursModal: () => set({ isWorkHoursModalOpen: false }),
+
+  openImportModal: () => set({ isImportModalOpen: true }),
+  closeImportModal: () => set({ isImportModalOpen: false }),
 
   showToast: (text, type = 'info', title, durationMs = 4500, action, customTheme) => {
     const id = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;

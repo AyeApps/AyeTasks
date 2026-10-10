@@ -2,6 +2,18 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authStorage } from './authStorage';
 
+export class ApiError extends Error {
+  status: number;
+  detail: any | undefined;
+  
+  constructor(message: string, status: number, detail?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
 export const getApiBaseUrl = (): string => {
   // 1. Auto-detect local web development (localhost, 127.0.0.1, or LAN IP)
   const isWebLocal =
@@ -130,8 +142,10 @@ async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Pr
 
     if (!response.ok) {
       let errorMessage = 'Error en la solicitud';
+      let rawDetail: any;
       try {
         const err = await response.json();
+        rawDetail = err.detail;
         if (typeof err.detail === 'string') {
           errorMessage = err.detail;
         } else if (Array.isArray(err.detail)) {
@@ -148,7 +162,7 @@ async function apiRequest<T>(endpoint: string, options: RequestOptions = {}): Pr
         else if (response.status === 429) errorMessage = 'Demasiados intentos. Espera un momento.';
         else if (response.status >= 500) errorMessage = 'Error interno del servidor';
       }
-      throw new Error(errorMessage);
+      throw new ApiError(errorMessage, response.status, rawDetail);
     }
 
     if (response.status === 204) {
@@ -213,6 +227,10 @@ export const api = {
     return apiRequest<any[]>(`/tasks/${qs}`);
   },
   createTask: (data: any) => apiRequest<any>('/tasks/', { method: 'POST', body: JSON.stringify(data) }),
+  importTasks: (payload: any, dryRun: boolean) => {
+    const url = dryRun ? '/tasks/import?dry_run=true' : '/tasks/import';
+    return apiRequest<import('../types').ImportDryRunResponse | import('../types').ImportRealResponse>(url, { method: 'POST', body: JSON.stringify(payload) });
+  },
   updateTask: (id: string, data: any) => apiRequest<any>(`/tasks/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteTask: (id: string) => apiRequest<void>(`/tasks/${id}`, { method: 'DELETE' }),
 

@@ -124,6 +124,7 @@ export function useSyncSocket() {
 
             switch (eventType) {
               case 'TASK_CREATED':
+              case 'TASKS_IMPORTED':
                 useTaskStore.getState().loadTasksAndConnections();
                 break;
               case 'TASK_UPDATED':

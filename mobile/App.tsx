@@ -14,6 +14,7 @@ import { AuthScreen } from './src/components/auth/AuthScreen';
 import { LandingPage } from './src/components/landing/LandingPage';
 import { FloatingDock } from './src/components/board/FloatingDock';
 import { QuickAddTaskModal } from './src/components/board/QuickAddTaskModal';
+import { ImportTasksModal } from './src/components/board/ImportTasksModal';
 import { WeekHeader } from './src/components/board/WeekHeader';
 import { SidebarDrawer } from './src/components/navigation/SidebarDrawer';
 import { SettingsView } from './src/components/settings/SettingsView';
@@ -320,6 +321,7 @@ export default function App() {
 
             {/* Quick Add Task Modal */}
             <QuickAddTaskModal />
+            <ImportTasksModal />
 
             {/* Left-anchored Cyber Dashboard & Settings Sidebar Drawer */}
             <SidebarDrawer />

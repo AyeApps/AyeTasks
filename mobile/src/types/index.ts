@@ -82,3 +82,26 @@ export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
 }
+
+export interface ImportDryRunResponse {
+  dry_run: true;
+  summary: {
+    tasks: number;
+    events: number;
+    connections: number;
+    date_from: string;
+    date_to: string;
+  };
+}
+
+export interface ImportRealResponse {
+  import_id: string;
+  tasks: { id: string; [key: string]: any }[];
+  connections: { id: string; [key: string]: any }[];
+  refs: Record<string, string>;
+}
+
+export interface ImportErrorDetail {
+  path: string;
+  message: string;
+}

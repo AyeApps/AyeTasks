@@ -20,6 +20,7 @@ import {
   Shield,
   Layers,
   Languages,
+  FileJson,
 } from 'lucide-react-native';
 import { THEME } from '../../constants/theme';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -36,6 +37,7 @@ export const SidebarDrawer: React.FC = () => {
 
   const isSidebarOpen = useUIStore((state) => state.isSidebarOpen);
   const closeSidebar = useUIStore((state) => state.closeSidebar);
+  const openImportModal = useUIStore((state) => state.openImportModal);
 
   const viewMode = useUIStore((state) => state.viewMode);
   const setViewMode = useUIStore((state) => state.setViewMode);
@@ -249,6 +251,52 @@ export const SidebarDrawer: React.FC = () => {
               <ChevronRight
                 size={16}
                 color={viewMode === 'settings' ? colors.accent : colors.textMuted}
+              />
+            </TouchableOpacity>
+
+            {/* Import Tasks Link */}
+            <TouchableOpacity
+              style={[
+                styles.navItemBtn,
+                {
+                  borderColor: colors.borderColor,
+                  backgroundColor: colors.bgSurface,
+                  shadowColor: colors.shadowColor,
+                  marginTop: 10,
+                },
+              ]}
+              onPress={() => {
+                closeSidebar();
+                openImportModal();
+              }}
+              activeOpacity={0.7}
+            >
+              <View style={styles.navItemLeft}>
+                <FileJson
+                  size={18}
+                  color={colors.textPrimary}
+                  strokeWidth={2.5}
+                />
+                <View>
+                  <Text
+                    style={[
+                      styles.navItemTitle,
+                      {
+                        color: colors.textPrimary,
+                        fontWeight: THEME.weight.heavy,
+                      },
+                    ]}
+                  >
+                    {t.sidebar.importTasks}
+                  </Text>
+                  <Text style={[styles.navItemSub, { color: colors.textMuted }]}>
+                    {t.sidebar.importTasksDesc}
+                  </Text>
+                </View>
+              </View>
+              <ChevronRight
+                size={16}
+                color={colors.textMuted}
               />
             </TouchableOpacity>
           </ScrollView>
