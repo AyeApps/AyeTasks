@@ -1,12 +1,14 @@
+import { ThemeColors } from '../constants/theme';
+
 /**
  * Utility for calculating deadline time-decay progress and dynamic color shifting
  *
  * Rules:
- * - Day of delivery (< 24h): Updates hourly, Urgent Red (#ff1744)
- * - Less than 1 week (1-7 days): Updates daily, Amber Warning (#ffab00)
- * - Less than 1 month (7-30 days): Updates weekly/daily, Cyan (#00e5ff)
- * - Less than 1 year (1-12 months): Updates monthly/weekly, Green (#00c853)
- * - Overdue: Critical Pulsing Red (#d50000)
+ * - Day of delivery (< 24h): Updates hourly, Urgent Red (deadlineUrgent)
+ * - Less than 1 week (1-7 days): Updates daily, Amber Warning (deadlineSoon)
+ * - Less than 1 month (7-30 days): Updates weekly/daily, Cyan (deadlineWeeks)
+ * - Less than 1 year (1-12 months): Updates monthly/weekly, Green (deadlineMonths)
+ * - Overdue: Critical Pulsing Red (deadlineUrgent)
  */
 
 export interface DeadlineProgress {
@@ -20,10 +22,10 @@ export interface DeadlineProgress {
 }
 
 export function calculateDeadlineProgress(
-  createdAtStr?: string,
-  dueDateStr?: string,
-  dueTimeStr?: string,
-  isDark: boolean = true
+  createdAtStr: string | undefined,
+  dueDateStr: string | undefined,
+  dueTimeStr: string | undefined,
+  colors: ThemeColors
 ): DeadlineProgress | null {
   if (!dueDateStr) return null;
 
@@ -59,8 +61,8 @@ export function calculateDeadlineProgress(
     return {
       percentage: 100,
       label: overdueDays <= 1 ? 'OVERDUE (TODAY)' : `OVERDUE (${overdueDays}D AGO)`,
-      color: '#ff1744',
-      backgroundColor: isDark ? '#2d0a0f' : '#fee2e2',
+      color: colors.deadlineUrgent,
+      backgroundColor: colors.deadlineUrgentSubtle,
       isUrgent: true,
       isToday: false,
       isOverdue: true,
@@ -81,8 +83,8 @@ export function calculateDeadlineProgress(
     return {
       percentage,
       label,
-      color: '#ff1744',
-      backgroundColor: isDark ? '#2d0a0f' : '#fee2e2',
+      color: colors.deadlineUrgent,
+      backgroundColor: colors.deadlineUrgentSubtle,
       isUrgent: true,
       isToday: true,
       isOverdue: false,
@@ -95,8 +97,8 @@ export function calculateDeadlineProgress(
     return {
       percentage,
       label: `${daysLeft} ${daysLeft === 1 ? 'DAY' : 'DAYS'} LEFT`,
-      color: '#ffab00',
-      backgroundColor: isDark ? '#2a1c05' : '#fef3c7',
+      color: colors.deadlineSoon,
+      backgroundColor: colors.deadlineSoonSubtle,
       isUrgent: false,
       isToday: false,
       isOverdue: false,
@@ -109,8 +111,8 @@ export function calculateDeadlineProgress(
     return {
       percentage,
       label: `${weeksLeft} ${weeksLeft === 1 ? 'WK' : 'WKS'} LEFT`,
-      color: isDark ? '#00e5ff' : '#0284c7',
-      backgroundColor: isDark ? '#082530' : '#e0f2fe',
+      color: colors.deadlineWeeks,
+      backgroundColor: colors.deadlineWeeksSubtle,
       isUrgent: false,
       isToday: false,
       isOverdue: false,
@@ -123,8 +125,8 @@ export function calculateDeadlineProgress(
     return {
       percentage,
       label: `${monthsLeft} ${monthsLeft === 1 ? 'MO' : 'MOS'} LEFT`,
-      color: '#00c853',
-      backgroundColor: isDark ? '#0a2e16' : '#e8f8ee',
+      color: colors.deadlineMonths,
+      backgroundColor: colors.deadlineMonthsSubtle,
       isUrgent: false,
       isToday: false,
       isOverdue: false,
@@ -136,8 +138,8 @@ export function calculateDeadlineProgress(
   return {
     percentage,
     label: `${yearsLeft} ${yearsLeft === 1 ? 'YR' : 'YRS'} LEFT`,
-    color: isDark ? '#a855f7' : '#7e22ce',
-    backgroundColor: isDark ? '#240a34' : '#f3e8ff',
+    color: colors.deadlineLong,
+    backgroundColor: colors.deadlineLongSubtle,
     isUrgent: false,
     isToday: false,
     isOverdue: false,

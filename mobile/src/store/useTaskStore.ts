@@ -6,6 +6,7 @@ import { useAuthStore, registerSessionPurgeHandler, registerAuthSuccessHandler }
 import { useUIStore } from './useUIStore';
 import { Task, TaskConnection, TaskStatus } from '../types';
 import { getWeekDays } from '../utils/dateUtils';
+import { DEFAULT_TASK_COLOR } from '../constants/theme';
 
 const getStorageKeys = (userId?: string | null) => {
   const prefix = userId ? `@ayetasks_user_${userId}` : '@ayetasks_guest';
@@ -242,7 +243,7 @@ export const useTaskStore = create<TaskStore>((set, get) => {
             actualDurationSeconds: t.actual_duration_seconds || 0,
             status: t.status,
             priority: t.priority,
-            colorTag: t.color_tag || '#00c853',
+            colorTag: t.color_tag || DEFAULT_TASK_COLOR,
             positionIndex: t.position_index || 0,
             parentTaskId: t.parent_task_id,
             createdAt: t.created_at,
@@ -308,7 +309,7 @@ export const useTaskStore = create<TaskStore>((set, get) => {
         actualDurationSeconds: 0,
         status: 'todo',
         priority: taskData.priority || 'medium',
-        colorTag: taskData.colorTag || '#00c853',
+        colorTag: taskData.colorTag || DEFAULT_TASK_COLOR,
         positionIndex: get().tasks.filter((t) => t.date === taskData.date).length,
         parentTaskId: taskData.parentTaskId,
         createdAt: new Date().toISOString(),

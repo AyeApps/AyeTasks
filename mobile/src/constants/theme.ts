@@ -29,6 +29,18 @@ export interface ThemeColors {
   accentAlert: string;
   accentAlertSubtle: string;
 
+  // Deadline colors
+  deadlineUrgent: string;
+  deadlineUrgentSubtle: string;
+  deadlineSoon: string;
+  deadlineSoonSubtle: string;
+  deadlineWeeks: string;
+  deadlineWeeksSubtle: string;
+  deadlineMonths: string;
+  deadlineMonthsSubtle: string;
+  deadlineLong: string;
+  deadlineLongSubtle: string;
+
   textPrimary: string;
   textInvert: string;
   textSecondary: string;
@@ -36,6 +48,7 @@ export interface ThemeColors {
 
   shadowColor: string;
   gridDotColor: string;
+  scrim: string;
 }
 
 export const DARK_THEME: ThemeColors = {
@@ -64,6 +77,18 @@ export const DARK_THEME: ThemeColors = {
   accentAlert: '#ff4444',
   accentAlertSubtle: 'rgba(255, 68, 68, 0.15)',
 
+  // Deadline colors
+  deadlineUrgent: '#ff1744',
+  deadlineUrgentSubtle: '#2d0a0f',
+  deadlineSoon: '#ffab00',
+  deadlineSoonSubtle: '#2a1c05',
+  deadlineWeeks: '#00e5ff',
+  deadlineWeeksSubtle: '#082530',
+  deadlineMonths: '#00c853',
+  deadlineMonthsSubtle: '#0a2e16',
+  deadlineLong: '#a855f7',
+  deadlineLongSubtle: '#240a34',
+
   textPrimary: '#ffffff',
   textInvert: '#000000',
   textSecondary: '#aaaaaa',
@@ -71,6 +96,7 @@ export const DARK_THEME: ThemeColors = {
 
   shadowColor: '#ffffff',
   gridDotColor: 'rgba(255, 255, 255, 0.15)',
+  scrim: 'rgba(0, 0, 0, 0.85)',
 };
 
 export const LIGHT_THEME: ThemeColors = {
@@ -99,6 +125,18 @@ export const LIGHT_THEME: ThemeColors = {
   accentAlert: '#d32f2f',
   accentAlertSubtle: 'rgba(211, 47, 47, 0.15)',
 
+  // Deadline colors
+  deadlineUrgent: '#ff1744',
+  deadlineUrgentSubtle: '#fee2e2',
+  deadlineSoon: '#ffab00',
+  deadlineSoonSubtle: '#fef3c7',
+  deadlineWeeks: '#0284c7',
+  deadlineWeeksSubtle: '#e0f2fe',
+  deadlineMonths: '#00c853',
+  deadlineMonthsSubtle: '#e8f8ee',
+  deadlineLong: '#7e22ce',
+  deadlineLongSubtle: '#f3e8ff',
+
   textPrimary: '#000000',
   textInvert: '#ffffff',
   textSecondary: '#555555',
@@ -106,6 +144,7 @@ export const LIGHT_THEME: ThemeColors = {
 
   shadowColor: '#000000',
   gridDotColor: 'rgba(0, 0, 0, 0.12)',
+  scrim: 'rgba(0, 0, 0, 0.85)',
 };
 
 export const THEME = {
@@ -134,8 +173,44 @@ export const THEME = {
     bold: 'System',
     mono: 'Courier',
   },
+  text: {
+    micro: 9,
+    caption: 10,
+    small: 11,
+    label: 12,
+    body: 13,
+    bodyLg: 16,
+    title: 18,
+    heading: 22,
+    display: 28,
+    hero: 40,
+  },
+  weight: {
+    regular: '400',
+    semibold: '600',
+    bold: '700',
+    heavy: '800',
+    black: '900',
+  },
 } as const;
 
 export function getThemeColors(mode: 'dark' | 'light'): ThemeColors {
   return mode === 'light' ? LIGHT_THEME : DARK_THEME;
 }
+
+export const TASK_COLOR_PALETTE = [
+  '#00c853', // Green
+  '#00e5ff', // Cyan
+  '#ffab00', // Amber
+  '#ff1744', // Red
+  '#a855f7', // Purple
+  '#ec4899', // Pink
+  '#3b82f6', // Blue
+  '#f97316', // Orange
+  '#eab308', // Yellow
+  '#14b8a6', // Teal
+  '#ffffff', // White
+  '#94a3b8', // Slate
+];
+
+export const DEFAULT_TASK_COLOR = '#00c853';

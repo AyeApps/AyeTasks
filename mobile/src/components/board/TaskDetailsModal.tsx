@@ -26,7 +26,7 @@ import {
   Eye,
   MapPin,
 } from 'lucide-react-native';
-import { THEME } from '../../constants/theme';
+import { THEME, TASK_COLOR_PALETTE, DEFAULT_TASK_COLOR } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useUIStore } from '../../store/useUIStore';
 import { useTaskStore } from '../../store/useTaskStore';
@@ -43,21 +43,6 @@ import {
   formatDateISO,
   getMondayOfWeek,
 } from '../../utils/dateUtils';
-
-const COLOR_PALETTE = [
-  '#00c853', // Emerald Green
-  '#00e5ff', // Cyan Neon
-  '#ffab00', // Amber
-  '#ff1744', // Crimson Red
-  '#a855f7', // Purple Neon
-  '#ec4899', // Pink Neon
-  '#3b82f6', // Electric Blue
-  '#f97316', // Orange
-  '#eab308', // Yellow
-  '#14b8a6', // Teal
-  '#ffffff', // Clean White
-  '#94a3b8', // Muted Slate
-];
 
 const TIME_PRESETS = ['09:00', '12:00', '15:00', '18:00', '21:00'];
 
@@ -99,8 +84,8 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [location, setLocation] = useState('');
-  const [colorTag, setColorTag] = useState('#00c853');
-  const [customHex, setCustomHex] = useState('#00c853');
+  const [colorTag, setColorTag] = useState(DEFAULT_TASK_COLOR);
+  const [customHex, setCustomHex] = useState(DEFAULT_TASK_COLOR);
   const [isSaving, setIsSaving] = useState(false);
   const [newComment, setNewComment] = useState('');
 
@@ -135,8 +120,8 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
       setStartTime(task.startTime || '');
       setEndTime(task.endTime || '');
       setLocation(task.location || '');
-      setColorTag(task.colorTag || '#00c853');
-      setCustomHex(task.colorTag || '#00c853');
+      setColorTag(task.colorTag || DEFAULT_TASK_COLOR);
+      setCustomHex(task.colorTag || DEFAULT_TASK_COLOR);
     }
     // Default to clean view mode whenever modal is opened
     setIsEditing(false);
@@ -206,8 +191,8 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
       setStartTime(task.startTime || '');
       setEndTime(task.endTime || '');
       setLocation(task.location || '');
-      setColorTag(task.colorTag || '#00c853');
-      setCustomHex(task.colorTag || '#00c853');
+      setColorTag(task.colorTag || DEFAULT_TASK_COLOR);
+      setCustomHex(task.colorTag || DEFAULT_TASK_COLOR);
     }
     setIsEditing(false);
   };
@@ -664,7 +649,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
 
                 {/* Swatches Grid */}
                 <View style={styles.paletteGrid}>
-                  {COLOR_PALETTE.map((c) => {
+                  {TASK_COLOR_PALETTE.map((c) => {
                     const isSelected = colorTag.toLowerCase() === c.toLowerCase();
                     return (
                       <TouchableOpacity

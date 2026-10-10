@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { X, Link as LinkIcon, Calendar, Check, Ban, Clock, Palette, FileText, MapPin } from 'lucide-react-native';
-import { THEME } from '../../constants/theme';
+import { THEME, TASK_COLOR_PALETTE, DEFAULT_TASK_COLOR } from '../../constants/theme';
 import { useTheme } from '../../hooks/useTheme';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useUIStore } from '../../store/useUIStore';
@@ -40,21 +40,6 @@ const QUICK_DURATION_PRESETS = [
 const TIME_PRESETS = ['09:00', '12:00', '15:00', '18:00', '21:00'];
 const START_TIME_PRESETS = ['08:00', '09:00', '10:00', '11:00', '14:00', '16:00'];
 const END_TIME_PRESETS = ['09:00', '10:00', '11:00', '12:00', '15:00', '17:00'];
-
-const COLOR_PALETTE = [
-  '#00c853', // Emerald
-  '#00e5ff', // Cyan
-  '#ffab00', // Amber
-  '#ff1744', // Red
-  '#a855f7', // Purple
-  '#ec4899', // Pink
-  '#3b82f6', // Blue
-  '#f97316', // Orange
-  '#eab308', // Yellow
-  '#14b8a6', // Teal
-  '#ffffff', // White
-  '#94a3b8', // Slate
-];
 
 export const QuickAddTaskModal: React.FC = () => {
   const { width } = useWindowDimensions();
@@ -91,8 +76,8 @@ export const QuickAddTaskModal: React.FC = () => {
   const [location, setLocation] = useState('');
   const [durationValue, setDurationValue] = useState('1');
   const [durationUnit, setDurationUnit] = useState<DurationUnit>('hours');
-  const [selectedColor, setSelectedColor] = useState('#00c853');
-  const [customHex, setCustomHex] = useState('#00c853');
+  const [selectedColor, setSelectedColor] = useState(DEFAULT_TASK_COLOR);
+  const [customHex, setCustomHex] = useState(DEFAULT_TASK_COLOR);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const titleInputRef = useRef<TextInput | null>(null);
@@ -132,8 +117,8 @@ export const QuickAddTaskModal: React.FC = () => {
       setLocation('');
       setDurationValue('1');
       setDurationUnit('hours');
-      setSelectedColor('#00c853');
-      setCustomHex('#00c853');
+      setSelectedColor(DEFAULT_TASK_COLOR);
+      setCustomHex(DEFAULT_TASK_COLOR);
     }
   }, [isOpen, targetDate]);
 
@@ -1136,7 +1121,7 @@ export const QuickAddTaskModal: React.FC = () => {
 
               {/* Extended Swatches */}
               <View style={styles.colorsRow}>
-                {COLOR_PALETTE.map((color) => {
+                {TASK_COLOR_PALETTE.map((color) => {
                   const isSelected = selectedColor.toLowerCase() === color.toLowerCase();
                   return (
                     <TouchableOpacity

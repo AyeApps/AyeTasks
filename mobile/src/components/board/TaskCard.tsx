@@ -93,7 +93,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
   const isConnectSource = connectingSourceTaskId === task.id;
 
   const deadlineInfo = !isCompleted && task.dueDate
-    ? calculateDeadlineProgress(task.createdAt, task.dueDate, task.dueTime, isDark)
+    ? calculateDeadlineProgress(task.createdAt, task.dueDate, task.dueTime, colors)
     : null;
 
   const cardScaleAnim = useRef(new Animated.Value(1)).current;

@@ -48,7 +48,7 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
 }) => {
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const { language, t } = useTranslation();
 
   const allTasks = useTaskStore((state) => state.tasks);
@@ -285,7 +285,7 @@ export const DayDeliveryReportModal: React.FC<DayDeliveryReportModalProps> = ({
                   const isTracking = !!activeTimers[tItem.id];
                   const tagColor = tItem.colorTag || colors.accent;
                   const deadlineProg = tItem.dueDate
-                    ? calculateDeadlineProgress(tItem.createdAt, tItem.dueDate, tItem.dueTime, isDark)
+                    ? calculateDeadlineProgress(tItem.createdAt, tItem.dueDate, tItem.dueTime, colors)
                     : null;
 
                   return (
