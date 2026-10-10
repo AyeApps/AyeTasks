@@ -1,9 +1,11 @@
-from typing import List, Optional
-from fastapi import APIRouter, Query, status
+from typing import List, Optional, Any
+from fastapi import APIRouter, Query, status, Body, Response, HTTPException
 from app.core.deps import CurrentUser
 from app.models.base import get_link_id
 from app.schemas.task import TaskCreate, TaskResponse, TaskUpdate
 from app.services.task_service import TaskService
+from app.services.task_import_service import TaskImportService
+from app.schemas.task_import import ImportRoot
 
 router = APIRouter()
 
@@ -103,3 +105,27 @@ async def update_task(id: str, data: TaskUpdate, current_user: CurrentUser):
 async def delete_task(id: str, current_user: CurrentUser):
     await TaskService.delete_task(current_user, id)
     return None
+
+
+@router.post("/import")
+async def import_tasks(
+    current_user: CurrentUser,
+    response: Response,
+    data: Any = Body(...),
+    dry_run: bool = Query(False)
+):
+    if not isinstance(data, dict):
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "IMPORT_INVALID", "errors": [{"path": "", "message": "El cuerpo debe ser un objeto JSON"}]}
+        )
+    result = await TaskImportService.import_tasks(current_user, data, dry_run=dry_run)
+    if dry_run:
+        response.status_code = status.HTTP_200_OK
+    else:
+        response.status_code = status.HTTP_201_CREATED
+    return result
+
+@router.get("/import/schema")
+async def get_import_schema(current_user: CurrentUser):
+    return ImportRoot.model_json_schema(by_alias=True)

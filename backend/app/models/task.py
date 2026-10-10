@@ -40,6 +40,7 @@ class Task(SoftDeleteDocument):
     position_index: int = 0
     parent_task_id: Optional[Link["Task"]] = None
     comments: list[str] = Field(default_factory=list)
-
+    source: Optional[str] = None
+    import_id: Optional[str] = Field(default=None, index=True)
     class Settings:
         name = "tasks"
