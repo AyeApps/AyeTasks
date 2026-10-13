@@ -19,6 +19,7 @@ import { useUIStore } from '../../store/useUIStore';
 import { useTranslation } from '../../store/useLanguageStore';
 import { api, ApiError } from '../../services/api';
 import { getImportTemplate } from '../../utils/importTemplate';
+import { downloadImportTemplate } from '../../utils/downloadTemplate';
 import { ImportErrorDetail, ImportDryRunResponse } from '../../types';
 
 export const ImportTasksModal: React.FC = () => {
@@ -39,6 +40,7 @@ export const ImportTasksModal: React.FC = () => {
   const [step, setStep] = useState<'edit' | 'preview'>('edit');
   const [jsonText, setJsonText] = useState('');
   const [isValidating, setIsValidating] = useState(false);
+  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   
   const [previewSummary, setPreviewSummary] = useState<ImportDryRunResponse['summary'] | null>(null);
@@ -81,6 +83,25 @@ export const ImportTasksModal: React.FC = () => {
     if (localError || validationErrors.length > 0) {
       setLocalError(null);
       setValidationErrors([]);
+    }
+  };
+
+    const handleDownloadTemplate = async () => {
+    try {
+      setIsDownloadingTemplate(true);
+      const content = getImportTemplate(language);
+      await downloadImportTemplate(content, t.importTasks.templateFileName, t.importTasks.downloadDialogTitle);
+      if (Platform.OS === 'web') {
+        showToast(
+          t.importTasks.downloadSuccess,
+          'success',
+          t.importTasks.downloadSuccessTitle
+        );
+      }
+    } catch (error) {
+      showToast(t.importTasks.downloadError, 'error');
+    } finally {
+      setIsDownloadingTemplate(false);
     }
   };
 
@@ -281,7 +302,7 @@ export const ImportTasksModal: React.FC = () => {
                 <View style={styles.actionsRow}>
                   <TouchableOpacity
                     onPress={handleInsertTemplate}
-                    disabled={isValidating}
+                    disabled={isValidating || isDownloadingTemplate}
                     style={[styles.actionBtn, { borderColor: colors.borderMuted }]}
                   >
                     <Text style={[styles.actionBtnText, { color: colors.textPrimary }]}>
@@ -289,10 +310,20 @@ export const ImportTasksModal: React.FC = () => {
                     </Text>
                   </TouchableOpacity>
 
+                                    <TouchableOpacity
+                    onPress={handleDownloadTemplate}
+                    disabled={isValidating || isDownloadingTemplate}
+                    style={[styles.actionBtn, { borderColor: colors.borderMuted }]}
+                  >
+                    <Text style={[styles.actionBtnText, { color: colors.textPrimary }]}>
+                      {t.importTasks.btnDownloadTemplate}
+                    </Text>
+                  </TouchableOpacity>
+
                   <TouchableOpacity
                     onPress={handleClear}
-                    disabled={isValidating}
-                    style={[styles.actionBtn, { borderColor: colors.borderMuted, marginLeft: THEME.spacing.sm }]}
+                    disabled={isValidating || isDownloadingTemplate}
+                    style={[styles.actionBtn, { borderColor: colors.borderMuted }]}
                   >
                     <Text style={[styles.actionBtnText, { color: colors.textPrimary }]}>
                       {t.importTasks.btnClear}
@@ -332,7 +363,7 @@ export const ImportTasksModal: React.FC = () => {
                     },
                   ]}
                   onPress={handleValidate}
-                  disabled={isValidating}
+                  disabled={isValidating || isDownloadingTemplate}
                   activeOpacity={0.8}
                 >
                   {isValidating ? (
@@ -400,7 +431,7 @@ export const ImportTasksModal: React.FC = () => {
                       styles.primaryBtn,
                       {
                         flex: 2,
-                        marginLeft: 12,
+                        marginLeft: THEME.spacing.xs, // + columnGap de actionsRow = los 12px de antes
                         backgroundColor: isImporting ? colors.borderMuted : colors.accent,
                       },
                     ]}
@@ -527,6 +558,9 @@ const styles = StyleSheet.create({
   },
   actionsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: THEME.spacing.sm,
+    rowGap: THEME.spacing.sm,
     marginTop: THEME.spacing.md,
   },
   actionBtn: {
@@ -534,6 +568,7 @@ const styles = StyleSheet.create({
     borderRadius: THEME.radius.xs,
     paddingHorizontal: 12,
     paddingVertical: 6,
+    marginVertical: THEME.spacing.xs,
   },
   actionBtnText: {
     fontSize: THEME.text.small,
